@@ -9,8 +9,8 @@ export const DEMO_SAAS_SUPER_ADMIN = {
 } as const;
 
 export const DEMO_TENANT_ADMIN = {
-  email: "admin@travelvoo.demo",
-  password: "Travelvoo2026!",
+  email: "demo@demo.com",
+  password: "demo.com",
 } as const;
 
 export function showDemoLoginHint(): boolean {
