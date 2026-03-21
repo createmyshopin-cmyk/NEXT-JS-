@@ -243,9 +243,15 @@ async function handleMessaging(sb: any, event: any, creds: any, start: number) {
   const recipientId = event.recipient?.id;
   const message = event.message;
 
-  if (!senderId || !recipientId || !message?.text) return;
+  if (!senderId || !recipientId || !message?.text) {
+    console.warn("[instagram-webhook] DM skipped: missing sender, recipient, or text");
+    return;
+  }
   const mid = message.mid;
-  if (!mid) return;
+  if (!mid) {
+    console.warn("[instagram-webhook] DM skipped: no message mid");
+    return;
+  }
 
   // Resolve tenant by recipient IG business account id or page id
   const { data: conn } = await sb
@@ -254,11 +260,20 @@ async function handleMessaging(sb: any, event: any, creds: any, start: number) {
     .or(`instagram_business_account_id.eq.${recipientId},facebook_page_id.eq.${recipientId}`)
     .maybeSingle();
 
-  if (!conn) return;
+  if (!conn) {
+    console.warn(
+      "[instagram-webhook] DM skipped: no tenant_instagram_connections for recipient id (must match ig biz id or page id in DB)",
+      recipientId,
+    );
+    return;
+  }
 
   // Entitlement check
   const ent = await checkInstagramEntitlement(sb, conn.tenant_id);
-  if (!ent.entitled) return;
+  if (!ent.entitled) {
+    console.warn("[instagram-webhook] DM skipped: not entitled", conn.tenant_id, ent.reason ?? "");
+    return;
+  }
 
   // Dedupe
   const { error: dedupeErr } = await sb
@@ -266,7 +281,10 @@ async function handleMessaging(sb: any, event: any, creds: any, start: number) {
     .insert({ message_mid: mid, tenant_id: conn.tenant_id })
     .select()
     .maybeSingle();
-  if (dedupeErr) return; // duplicate
+  if (dedupeErr) {
+    console.warn("[instagram-webhook] DM skipped: duplicate message_mid (Meta retry or same event)", mid);
+    return; // duplicate
+  }
 
   // Load tenant AI settings
   const { data: aiSettings } = await sb
@@ -282,11 +300,17 @@ async function handleMessaging(sb: any, event: any, creds: any, start: number) {
     .eq("tenant_id", conn.tenant_id)
     .maybeSingle();
 
-  if (autoConfig && !autoConfig.enabled) return;
+  if (autoConfig && !autoConfig.enabled) {
+    console.warn("[instagram-webhook] DM skipped: instagram_automation_config master disabled (tenant)", conn.tenant_id);
+    return;
+  }
 
   const settings = (autoConfig?.settings ?? {}) as any;
   const dmConfig = settings.channels?.dm ?? {};
-  if (dmConfig.enabled === false) return;
+  if (dmConfig.enabled === false) {
+    console.warn("[instagram-webhook] DM skipped: DM channel disabled in settings (tenant)", conn.tenant_id);
+    return;
+  }
 
   const graphVersion = creds.graphApiVersion || "v25.0";
 

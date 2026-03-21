@@ -288,6 +288,12 @@ Regenerate types: [`src/integrations/supabase/types.ts`](../src/integrations/sup
 - Rate-limit LLM + outbound sends per tenant if needed (reuse [`src/lib/rate-limit-memory.ts`](../src/lib/rate-limit-memory.ts) pattern).
 - **Realtime QA**: Verify Supabase Realtime subscriptions receive inserts only for the signed-in tenant’s `tenant_id` (RLS); load-test chart updates when many DMs arrive.
 
+**Live DM preview empty after sending a test message**
+
+- Meta must **POST** to your **deployed** webhook URL (HTTPS). Local `npm run dev` does not receive Meta traffic unless you use a tunnel and register that URL in the Meta app.
+- The preview only shows rows **after** the webhook finishes handling the DM (it reads `instagram_channel_activity`). If nothing is inserted, check **host logs** (e.g. Vercel) for warnings prefixed with **`[instagram-webhook]`**: no matching `tenant_instagram_connections` for `recipient.id`, **entitlement** (plugin not installed / expired), **duplicate** `message_mid`, **automation master** disabled, or **DM channel** disabled in `instagram_automation_config.settings`.
+- Confirm the Instagram **Instagram Business Account id** (or Page id) Meta sends as **recipient** matches the row stored at OAuth time.
+
 ## Risk / scope notes
 
 - **App Review** is required for broad customer use of Instagram messaging permissions; development can proceed on a test IG account.

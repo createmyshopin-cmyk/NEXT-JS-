@@ -127,39 +127,43 @@ export default function InstagramBotOverview() {
     };
 
     (async () => {
-      const { data: tid } = await supabase.rpc("get_my_tenant_id");
-      if (!tid) {
-        setLoading(false);
-        return;
+      try {
+        const { data: tid } = await supabase.rpc("get_my_tenant_id");
+        if (!tid) {
+          return;
+        }
+
+        await loadOverview(tid);
+        if (cancelled) return;
+
+        realtimeChannel = supabase
+          .channel(`ig-activity-overview-${tid}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "instagram_channel_activity",
+              filter: `tenant_id=eq.${tid}`,
+            },
+            (payload) => {
+              const row = payload.new as ActivityRow;
+              if (row.channel === "dm") {
+                setDmFeed((prev) => mergeDmFeed(prev, row));
+              }
+              scheduleReload(tid);
+            },
+          )
+          .subscribe();
+
+        poll = setInterval(() => {
+          void loadOverview(tid);
+        }, 20000);
+      } catch (e) {
+        console.error("[InstagramBotOverview] init failed", e);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      await loadOverview(tid);
-      if (cancelled) return;
-      setLoading(false);
-
-      realtimeChannel = supabase
-        .channel(`ig-activity-overview-${tid}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "instagram_channel_activity",
-            filter: `tenant_id=eq.${tid}`,
-          },
-          (payload) => {
-            const row = payload.new as ActivityRow;
-            if (row.channel === "dm") {
-              setDmFeed((prev) => mergeDmFeed(prev, row));
-            }
-            scheduleReload(tid);
-          },
-        )
-        .subscribe();
-
-      poll = setInterval(() => {
-        void loadOverview(tid);
-      }, 20000);
     })();
 
     return () => {
@@ -181,21 +185,8 @@ export default function InstagramBotOverview() {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Instagram Bot Overview</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpiCards.map((c) => (
-          <Card key={c.label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{c.label}</CardTitle>
-              <c.icon className={`h-5 w-5 ${c.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{loading ? "..." : c.value}</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
+      {/* Live DM preview first so it stays above the fold on most viewports */}
+      <Card id="live-dm-preview" className="scroll-mt-4 border-primary/20">
         <CardHeader>
           <CardTitle className="text-base">Live DM preview</CardTitle>
           <p className="text-xs text-muted-foreground font-normal">
@@ -204,10 +195,13 @@ export default function InstagramBotOverview() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              Loading activity…
+            </div>
           ) : dmFeed.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No DMs yet. Connect your Instagram account and start receiving messages.
+            <p className="text-sm text-muted-foreground py-2">
+              No DMs yet. Connect your Instagram account under <strong className="text-foreground">Setup</strong>, then send a test DM — processed messages will show here.
             </p>
           ) : (
             <div className="flex flex-col gap-3 max-h-[28rem] overflow-y-auto rounded-lg border bg-muted/30 p-3">
@@ -240,6 +234,20 @@ export default function InstagramBotOverview() {
           )}
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpiCards.map((c) => (
+          <Card key={c.label}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{c.label}</CardTitle>
+              <c.icon className={`h-5 w-5 ${c.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{loading ? "..." : c.value}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
