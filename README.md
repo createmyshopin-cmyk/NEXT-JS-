@@ -51,3 +51,19 @@ Source: **[github.com/createmyshopin-cmyk/NEXT-JS-](https://github.com/createmys
 3. Copy `.env.local.example` to environment variables in **Settings** → **Environment Variables** (never commit secrets).
 
 See also [Next.js deployment on Vercel](https://nextjs.org/docs/app/building-your-application/deploying).
+
+### Vercel CLI (login + link this folder)
+
+Requires [Vercel CLI](https://vercel.com/docs/cli) (`npm i -g vercel`).
+
+```bash
+vercel login
+```
+
+Approve the device in the browser when prompted. Then from this project root, link to your dashboard project (adjust **scope** / **project** if yours differ):
+
+```bash
+vercel link --scope create-my-shop-s-projects --project stayfinder-2026
+```
+
+This creates a local **`.vercel/`** folder (gitignored) so `vercel env pull`, `vercel deploy`, etc. target the right project.
