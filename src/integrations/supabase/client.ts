@@ -65,6 +65,24 @@ function getClient(): SupabaseClient<Database> {
       autoRefreshToken: true,
     },
   });
+
+  if (typeof window !== "undefined") {
+    void _client.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { error } = await _client!.auth.refreshSession();
+      if (!error) return;
+      const msg = (error.message || "").toLowerCase();
+      const code = (error as { code?: string }).code;
+      if (
+        code === "refresh_token_not_found" ||
+        msg.includes("refresh token not found") ||
+        msg.includes("invalid refresh token")
+      ) {
+        await _client!.auth.signOut({ scope: "local" });
+      }
+    });
+  }
+
   return _client;
 }
 

@@ -53,7 +53,7 @@ async function resolveTenant(): Promise<ResolveResult> {
     .eq("custom_domain", hostname)
     .eq("verified", true)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (domainMatch?.tenant_id) {
     const tenant = domainMatch.tenants as { id: string; tenant_name: string } | null;
@@ -75,7 +75,7 @@ async function resolveTenant(): Promise<ResolveResult> {
       .select("tenant_id, tenants(id, tenant_name)")
       .eq("subdomain", subdomain)
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (subMatch?.tenant_id) {
       const tenant = subMatch.tenants as { id: string; tenant_name: string } | null;

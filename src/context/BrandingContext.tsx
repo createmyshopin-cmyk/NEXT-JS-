@@ -100,14 +100,14 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
           .from("tenants")
           .select("tenant_name, logo_url, favicon_url, primary_color, secondary_color, footer_text, seo_title, seo_description, seo_keywords, og_image_url")
           .eq("id", tenantId)
-          .single();
+          .maybeSingle();
         tenantData = data;
       } else {
         const { data } = await supabase
           .from("tenants")
           .select("tenant_name, logo_url, favicon_url, primary_color, secondary_color, footer_text, seo_title, seo_description, seo_keywords, og_image_url")
           .limit(1)
-          .single();
+          .maybeSingle();
         tenantData = data;
       }
 
@@ -115,7 +115,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
         .from("site_settings")
         .select("meta_title, meta_description, meta_keywords, og_image_url, og_title, og_description, contact_email, contact_phone, social_instagram, social_facebook, social_youtube")
         .limit(1)
-        .single();
+        .maybeSingle();
 
       const siteSeo = siteData as Record<string, string> | null;
       const siteName = tenantData?.tenant_name || siteSeo?.meta_title || "StayFinder";
