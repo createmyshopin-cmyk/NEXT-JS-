@@ -41,7 +41,12 @@ Source: **[github.com/createmyshopin-cmyk/NEXT-JS-](https://github.com/createmys
 
 1. **New project from this repo:** [Deploy on Vercel (clone from GitHub)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcreatemyshopin-cmyk%2FNEXT-JS-) — sign in with GitHub if prompted.
 
-2. **Already have a Vercel project?** In the [Vercel dashboard](https://vercel.com/dashboard) open your project → **Settings** → **Git** → **Connected Git Repository** → **Disconnect**, then **Connect Git Repository** and choose **`createmyshopin-cmyk/NEXT-JS-`**.
+2. **Already have a Vercel project?** Connect or change the repo from **project** Git settings (not team settings):
+   - Go to [vercel.com/dashboard](https://vercel.com/dashboard) and **click your project** (the app name).
+   - In the **left sidebar**, open **Settings** (gear icon at the bottom of the project menu — *not* “Team Settings” from the top team switcher).
+   - In the **Settings** sub-menu, click **Git**. (If you don’t see it, scroll the settings list; Vercel documents this as [Git settings](https://vercel.com/docs/project-configuration/git-settings).)
+   - Under **Connected Git Repository**, use **Disconnect** / **Connect** and pick **`createmyshopin-cmyk/NEXT-JS-`**.
+   - **Direct URL** (replace placeholders): `https://vercel.com/<your-team-slug>/<your-project-name>/settings/git`
 
 3. Copy `.env.local.example` to environment variables in **Settings** → **Environment Variables** (never commit secrets).
 
