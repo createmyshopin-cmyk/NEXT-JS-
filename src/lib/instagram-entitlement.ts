@@ -11,7 +11,7 @@ export async function checkInstagramEntitlement(
 ): Promise<{ entitled: boolean; reason?: string }> {
   const { data: items } = await supabase
     .from("marketplace_items")
-    .select("id, pricing_model")
+    .select("id, pricing_model, slug, manifest")
     .eq("type", "plugin")
     .eq("is_published", true);
 
