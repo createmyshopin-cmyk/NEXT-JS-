@@ -19,15 +19,20 @@ const META_KEY_ENV = "META_CREDENTIALS_ENCRYPTION_KEY";
  * Runs server-side only (service role).
  */
 export async function getMetaPlatformCredentials(): Promise<MetaPlatformCredentials> {
+  /** Still used when DB row exists but app secret / IDs are not yet valid (webhook verify must work). */
+  let webhookFromDb = "";
+
   try {
     const sb = createServiceRoleClient();
     const { data } = await sb
       .from("saas_meta_platform_config" as any)
       .select("meta_app_id, instagram_app_id, app_secret_encrypted, webhook_verify_token, graph_api_version, oauth_redirect_uri")
-      .single();
+      .maybeSingle();
 
     if (data) {
       const row = data as any;
+      webhookFromDb = String(row.webhook_verify_token ?? "").trim();
+
       let secret = "";
       if (row.app_secret_encrypted) {
         try {
@@ -43,7 +48,7 @@ export async function getMetaPlatformCredentials(): Promise<MetaPlatformCredenti
           metaAppId: row.meta_app_id || "",
           instagramAppId: row.instagram_app_id || "",
           metaAppSecret: secret,
-          webhookVerifyToken: row.webhook_verify_token || process.env.META_WEBHOOK_VERIFY_TOKEN || "",
+          webhookVerifyToken: webhookFromDb || process.env.META_WEBHOOK_VERIFY_TOKEN || "",
           graphApiVersion: row.graph_api_version || "v25.0",
           oauthRedirectUri: row.oauth_redirect_uri || process.env.INSTAGRAM_OAUTH_REDIRECT_URI || "",
         };
@@ -57,7 +62,7 @@ export async function getMetaPlatformCredentials(): Promise<MetaPlatformCredenti
     metaAppId: process.env.META_APP_ID || "",
     instagramAppId: process.env.INSTAGRAM_APP_ID || "",
     metaAppSecret: process.env.META_APP_SECRET || "",
-    webhookVerifyToken: process.env.META_WEBHOOK_VERIFY_TOKEN || "",
+    webhookVerifyToken: webhookFromDb || process.env.META_WEBHOOK_VERIFY_TOKEN || "",
     graphApiVersion: "v25.0",
     oauthRedirectUri: process.env.INSTAGRAM_OAUTH_REDIRECT_URI || "",
   };

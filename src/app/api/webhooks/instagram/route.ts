@@ -15,7 +15,7 @@ const TOKEN_KEY_ENV = "INSTAGRAM_TOKEN_ENCRYPTION_KEY";
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const mode = params.get("hub.mode");
-  const token = params.get("hub.verify_token");
+  const token = (params.get("hub.verify_token") ?? "").trim();
   const challenge = params.get("hub.challenge");
 
   if (mode !== "subscribe" || !challenge) {
@@ -23,7 +23,8 @@ export async function GET(req: NextRequest) {
   }
 
   const creds = await getMetaPlatformCredentials();
-  if (!creds.webhookVerifyToken || token !== creds.webhookVerifyToken) {
+  const expected = (creds.webhookVerifyToken ?? "").trim();
+  if (!expected || token !== expected) {
     return NextResponse.json({ error: "Verify token mismatch" }, { status: 403 });
   }
 

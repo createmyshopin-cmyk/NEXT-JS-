@@ -4,7 +4,12 @@ import { licenseCookieValidFromRequest } from "@/lib/license-token";
 
 function licenseExempt(req: NextRequest): boolean {
   const p = req.nextUrl.pathname;
-  return p === "/license" || p.startsWith("/api/license");
+  return (
+    p === "/license" ||
+    p.startsWith("/api/license") ||
+    // Meta / Instagram hit these without a browser session or license cookie
+    p.startsWith("/api/webhooks/")
+  );
 }
 
 export default async function middleware(req: NextRequest) {
