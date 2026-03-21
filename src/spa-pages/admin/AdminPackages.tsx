@@ -13,8 +13,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Loader2, Package, RefreshCw } from "lucide-react";
+import { ExternalLink, Loader2, Package, Plus, RefreshCw } from "lucide-react";
 import { useCurrency } from "@/context/CurrencyContext";
+import { AdminPackageCreateDialog } from "@/components/admin/AdminPackageCreateDialog";
 
 interface TripRow {
   id: string;
@@ -29,6 +30,7 @@ export default function AdminPackages() {
   const { format: fmt } = useCurrency();
   const [rows, setRows] = useState<TripRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const fetchTrips = useCallback(async () => {
     setLoading(true);
@@ -66,11 +68,23 @@ export default function AdminPackages() {
             Trips &amp; packages shown on your site. Manage records in Supabase or extend this screen with create/edit.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchTrips} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create package
+          </Button>
+          <Button variant="outline" size="sm" onClick={fetchTrips} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
+
+      <AdminPackageCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={fetchTrips}
+      />
 
       <Card>
         <CardHeader>
@@ -86,7 +100,7 @@ export default function AdminPackages() {
             </div>
           ) : rows.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">
-              No packages yet. Run the seed SQL or insert rows into the <code className="text-xs">trips</code> table for your tenant.
+              No packages yet. Click <strong>Create package</strong> or run seed SQL for your tenant.
             </p>
           ) : (
             <Table>
