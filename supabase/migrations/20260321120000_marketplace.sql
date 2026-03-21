@@ -1,5 +1,8 @@
 -- Marketplace: catalog, tenant installs, theme columns, transaction metadata
 -- Apply via Supabase SQL Editor or: supabase db push
+--
+-- If you change this file, update the duplicate bootstrap block in
+-- 20260321130000_marketplace_plannet_theme.sql (standalone SQL Editor runs).
 
 -- ---------------------------------------------------------------------------
 -- marketplace_items

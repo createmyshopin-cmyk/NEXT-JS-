@@ -1,4 +1,6 @@
--- Free published theme: Plannet (resort green / black / white). Run after marketplace migration.
+-- Free published theme: Plannet (resort green / black / white).
+-- Requires base marketplace migration first, or run supabase/manual_marketplace_and_plannet.sql once.
+
 INSERT INTO public.marketplace_items (
   type, slug, name, description, version, is_published,
   pricing_model, price, currency, manifest, sort_order

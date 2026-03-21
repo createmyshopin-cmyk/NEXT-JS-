@@ -2,9 +2,15 @@
 
 ## Apply database changes
 
-Run the SQL in `supabase/migrations/20260321120000_marketplace.sql` in the Supabase SQL Editor (or your migration workflow).
+**Easiest (SQL Editor):** run the whole file [`supabase/migrations/20260321130000_marketplace_plannet_theme.sql`](../../supabase/migrations/20260321130000_marketplace_plannet_theme.sql) once. It bootstraps marketplace (if missing) and inserts the free **Plannet** theme. Safe to re-run.
+
+Equivalent one-shot: [`supabase/manual_marketplace_and_plannet.sql`](../../supabase/manual_marketplace_and_plannet.sql) (same idea).
+
+**Or use migrations in order:** `20260321120000_marketplace.sql` then `20260321130000_…` — note the second file repeats the bootstrap with `IF NOT EXISTS`, so running it alone also works. Or `supabase db push` for ordered applies.
 
 Optional demo catalog row: `supabase/seed_marketplace_demo_item.sql`
+
+Optional Plannet-only seed (after base exists): `supabase/seed_marketplace_plannet_theme.sql`
 
 Optional feature/plan wiring: `supabase/seed_marketplace_feature.sql`
 

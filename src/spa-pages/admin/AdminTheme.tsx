@@ -11,6 +11,7 @@ import { clearSiteSettingsCache } from "@/hooks/useSiteSettings";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 import { useRouter } from "next/navigation";
 import { Loader2, Palette, Store } from "lucide-react";
+import { ThemeEditorProvider, ThemeHeroSection, ThemePreviewSection } from "@/components/admin/ThemeEditorPanel";
 import {
   ALLOWED_LANDING_THEME_VARS,
   type LandingThemePreset,
@@ -114,15 +115,19 @@ export default function AdminTheme() {
   }
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto px-1">
+    <div className="space-y-6 max-w-7xl mx-auto px-1">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Palette className="h-7 w-7 text-primary" />
           Theme
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Choose how your public landing page looks. Colors use HSL values (e.g. 199 89% 48%) or hex.</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Preset and colors update the live preview instantly. Save to apply on your public site. Hero slides and images can be edited below.
+        </p>
       </div>
 
+      <ThemeEditorProvider>
+      <div className="grid lg:grid-cols-2 gap-6 items-start">
       <Card>
         <CardHeader>
           <CardTitle>Landing page preset</CardTitle>
@@ -171,6 +176,13 @@ export default function AdminTheme() {
           </Button>
         </CardContent>
       </Card>
+
+      <ThemePreviewSection preset={preset} tokenInputs={tokenInputs} />
+      </div>
+
+      <ThemeHeroSection />
+
+      </ThemeEditorProvider>
 
       {marketplaceEnabled && (
         <Card>

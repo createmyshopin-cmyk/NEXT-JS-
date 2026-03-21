@@ -1,9 +1,14 @@
--- Plannet marketplace theme + self-contained bootstrap.
--- Safe to run alone in the SQL Editor: repeats marketplace DDL with IF NOT EXISTS, then inserts Plannet.
--- If you already applied 20260321120000_marketplace.sql, the DDL here is a no-op; only the INSERT may add a row.
+-- ============================================================================
+-- ONE-SHOT SETUP (Supabase SQL Editor): marketplace tables + Plannet theme row
+-- Run this entire file once. Safe to re-run: uses IF NOT EXISTS / idempotent insert.
+--
+-- Section A mirrors: migrations/20260321120000_marketplace.sql
+-- Section B mirrors: migrations/20260321130000_marketplace_plannet_theme.sql
+-- Keep these in sync if you edit the migration files.
+-- ============================================================================
 
 -- ---------------------------------------------------------------------------
--- (Same as 20260321120000_marketplace.sql — idempotent)
+-- SECTION A: Marketplace base (catalog, installs, columns, RLS)
 -- ---------------------------------------------------------------------------
 -- Marketplace: catalog, tenant installs, theme columns, transaction metadata
 
@@ -160,7 +165,7 @@ COMMENT ON TABLE public.marketplace_items IS 'Platform marketplace catalog (them
 COMMENT ON TABLE public.tenant_marketplace_installs IS 'Per-tenant marketplace installs';
 
 -- ---------------------------------------------------------------------------
--- Plannet catalog row (idempotent)
+-- SECTION B: Plannet theme catalog row (idempotent)
 -- ---------------------------------------------------------------------------
 INSERT INTO public.marketplace_items (
   type, slug, name, description, version, is_published,
