@@ -11,6 +11,62 @@ import { toast } from "@/hooks/use-toast";
 import { dispatchPlatformCurrencyChange, useCurrency } from "@/context/CurrencyContext";
 import { Settings, Shield, Globe, Mail, CreditCard, Clock, Save, Building2, Server, Copy, CheckCheck } from "lucide-react";
 
+/** Keys in `saas_platform_settings` for the General + Trial + Security cards (single source of truth in DB). */
+const GENERAL_SETTING_KEYS = [
+  "platform_name",
+  "support_email",
+  "default_currency",
+  "max_tenants_allowed",
+  "footer_text",
+  "default_trial_days",
+  "default_plan_id",
+  "auto_approve_signups",
+  "require_email_verification",
+  "maintenance_mode",
+] as const;
+
+type SettingsState = {
+  platformName: string;
+  supportEmail: string;
+  defaultTrialDays: number;
+  defaultCurrency: string;
+  maintenanceMode: boolean;
+  autoApproveSignups: boolean;
+  requireEmailVerification: boolean;
+  maxTenantsAllowed: number;
+  defaultPlanId: string;
+  footerText: string;
+  termsUrl: string;
+  privacyUrl: string;
+  smtpConfigured: boolean;
+  razorpayConfigured: boolean;
+  entriApplicationId: string;
+  entriSecret: string;
+  domainMethodGodaddy: boolean;
+  domainMethodHostinger: boolean;
+  domainMethodEntri: boolean;
+  platformBaseDomain: string;
+  platformCnameTarget: string;
+  platformARecordIp: string;
+  platformSubdomainSuffix: string;
+  platformDnsTtl: string;
+};
+
+function mapGeneralDbToState(m: Record<string, string>): Partial<SettingsState> {
+  const out: Partial<SettingsState> = {};
+  if (m.platform_name != null) out.platformName = m.platform_name;
+  if (m.support_email != null) out.supportEmail = m.support_email;
+  if (m.default_currency != null) out.defaultCurrency = m.default_currency;
+  if (m.max_tenants_allowed != null) out.maxTenantsAllowed = Number.parseInt(m.max_tenants_allowed, 10) || -1;
+  if (m.footer_text != null) out.footerText = m.footer_text;
+  if (m.default_trial_days != null) out.defaultTrialDays = Number.parseInt(m.default_trial_days, 10) || 14;
+  if (m.default_plan_id != null) out.defaultPlanId = m.default_plan_id;
+  if (m.auto_approve_signups != null) out.autoApproveSignups = m.auto_approve_signups === "true";
+  if (m.require_email_verification != null) out.requireEmailVerification = m.require_email_verification === "true";
+  if (m.maintenance_mode != null) out.maintenanceMode = m.maintenance_mode === "true";
+  return out;
+}
+
 const SaasAdminSettings = () => {
   const { format } = useCurrency();
   const [loading, setLoading] = useState(true);
@@ -80,13 +136,24 @@ const SaasAdminSettings = () => {
         platformDnsTtl: map.platform_dns_ttl || "600",
       }));
     }
-    const { data: curRow } = await supabase.from("saas_platform_settings").select("setting_value").eq("setting_key", "default_currency").maybeSingle();
-    if (curRow?.setting_value) {
-      setSettings((s) => ({ ...s, defaultCurrency: curRow.setting_value }));
+    const { data: generalRows } = await supabase
+      .from("saas_platform_settings")
+      .select("setting_key, setting_value")
+      .in("setting_key", [...GENERAL_SETTING_KEYS]);
+    const gm: Record<string, string> = {};
+    (generalRows || []).forEach((r: { setting_key: string; setting_value: string }) => {
+      gm[r.setting_key] = r.setting_value;
+    });
+    const fromDb = mapGeneralDbToState(gm);
+    if (Object.keys(fromDb).length > 0) {
+      setSettings((s) => ({ ...s, ...fromDb }));
       try {
         const raw = localStorage.getItem("saas_platform_settings");
         const obj = raw ? JSON.parse(raw) : {};
-        localStorage.setItem("saas_platform_settings", JSON.stringify({ ...obj, defaultCurrency: curRow.setting_value }));
+        localStorage.setItem(
+          "saas_platform_settings",
+          JSON.stringify({ ...obj, ...fromDb, defaultCurrency: fromDb.defaultCurrency ?? obj.defaultCurrency }),
+        );
       } catch { /* ignore */ }
     }
     setLoading(false);
@@ -103,15 +170,28 @@ const SaasAdminSettings = () => {
 
   const save = async () => {
     setSaving(true);
-    localStorage.setItem("saas_platform_settings", JSON.stringify(settings));
     try {
-      await upsertPlatformSetting("default_currency", settings.defaultCurrency);
+      await Promise.all([
+        upsertPlatformSetting("platform_name", settings.platformName),
+        upsertPlatformSetting("support_email", settings.supportEmail),
+        upsertPlatformSetting("default_currency", settings.defaultCurrency),
+        upsertPlatformSetting("max_tenants_allowed", String(settings.maxTenantsAllowed)),
+        upsertPlatformSetting("footer_text", settings.footerText),
+        upsertPlatformSetting("default_trial_days", String(settings.defaultTrialDays)),
+        upsertPlatformSetting("default_plan_id", settings.defaultPlanId),
+        upsertPlatformSetting("auto_approve_signups", String(settings.autoApproveSignups)),
+        upsertPlatformSetting("require_email_verification", String(settings.requireEmailVerification)),
+        upsertPlatformSetting("maintenance_mode", String(settings.maintenanceMode)),
+      ]);
+      localStorage.setItem("saas_platform_settings", JSON.stringify(settings));
       dispatchPlatformCurrencyChange(settings.defaultCurrency);
-    } catch (err: any) {
-      toast({ title: "Could not sync currency to server", description: err?.message, variant: "destructive" });
+      toast({ title: "Settings saved", description: "Platform settings synced to the database." });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: "Could not save settings", description: message, variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
-    toast({ title: "Settings saved" });
-    setSaving(false);
   };
 
   const saveEntriCredentials = async () => {
@@ -202,7 +282,7 @@ const SaasAdminSettings = () => {
               <Label>Default Currency</Label>
               <Select
                 value={settings.defaultCurrency}
-                onValueChange={(v) => {
+                onValueChange={async (v) => {
                   update("defaultCurrency", v);
                   try {
                     const raw = localStorage.getItem("saas_platform_settings");
@@ -210,6 +290,12 @@ const SaasAdminSettings = () => {
                     localStorage.setItem("saas_platform_settings", JSON.stringify({ ...obj, defaultCurrency: v }));
                   } catch { /* ignore */ }
                   dispatchPlatformCurrencyChange(v);
+                  try {
+                    await upsertPlatformSetting("default_currency", v);
+                  } catch (err: unknown) {
+                    const message = err instanceof Error ? err.message : String(err);
+                    toast({ title: "Could not save currency to database", description: message, variant: "destructive" });
+                  }
                 }}
               >
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
