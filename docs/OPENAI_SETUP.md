@@ -9,7 +9,7 @@ Used by: `POST /api/saas-admin/marketplace/ai-suggest` (Next.js App Router).
 | Where | Variable |
 | --- | --- |
 | Local dev | `.env.local` (gitignored) |
-| Vercel / Node host | Project → Environment Variables |
+| Vercel | Project → Settings → Environment Variables |
 
 ```bash
 OPENAI_API_KEY=sk-...your-new-key...
@@ -19,6 +19,20 @@ OPENAI_API_KEY=sk-...your-new-key...
 ```
 
 Redeploy or restart `next dev` after changing.
+
+### Vercel (step-by-step)
+
+1. Open [Vercel Dashboard](https://vercel.com/dashboard) → select your **project** (this Next.js app).
+2. **Settings** → **Environment Variables**.
+3. Add or edit:
+   - **Name:** `OPENAI_API_KEY`
+   - **Value:** your OpenAI secret key (starts with `sk-`).
+   - **Environments:** enable **Production** (required for live site). Optionally **Preview** / **Development** if you want AI on preview deployments.
+4. Optionally add `MARKETPLACE_AI_MODEL` (e.g. `gpt-4o-mini`) or `MARKETPLACE_AI_MAX_PER_MIN` the same way.
+5. **Save**, then trigger a new deployment: **Deployments** → **⋯** on latest → **Redeploy**, or push a commit.  
+   *Environment variables are baked in at build/runtime for serverless — a redeploy is required after changing them.*
+
+**Note:** Marketplace AI runs in **Next.js API routes** on Vercel, so only Vercel env vars are needed for Theme/Plugin Builder AI in production. Supabase Edge Function `ai-search` still needs the key in **Supabase** separately (section 2 below).
 
 ## 2. Tenant AI Search (Supabase Edge Function)
 
