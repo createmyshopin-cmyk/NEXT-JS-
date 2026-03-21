@@ -1,10 +1,13 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { licenseCookieValidFromRequest } from "@/lib/license-token";
 
-const licenseExempt = createRouteMatcher(["/license", "/api/license(.*)"]);
+function licenseExempt(req: NextRequest): boolean {
+  const p = req.nextUrl.pathname;
+  return p === "/license" || p.startsWith("/api/license");
+}
 
-export default clerkMiddleware(async (_auth, req) => {
+export default async function middleware(req: NextRequest) {
   if (process.env.LICENSE_GATE_ENABLED === "true") {
     const secret = process.env.LICENSE_SECRET;
     const itemIdRaw = process.env.ENVATO_ITEM_ID;
@@ -21,7 +24,8 @@ export default clerkMiddleware(async (_auth, req) => {
       }
     }
   }
-});
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [

@@ -5,8 +5,7 @@
 - App source was copied from the root Vite project (`src/`).
 - **`src/pages` → `src/spa-pages`**: Next.js reserves `src/pages` for the **Pages Router**. Screen modules live under `spa-pages`; **URLs are defined only in `src/app/`**.
 - **Env**: `VITE_SUPABASE_*` → **`NEXT_PUBLIC_SUPABASE_*`** in `src/integrations/supabase/client.ts`. Use `.env.local`.
-- **Clerk** (optional): `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` in `.env.local` for a permanent app in the Clerk dashboard. **Keyless mode** runs without them (temporary keys + “Configure your application” in the UI). Middleware lives in **`src/proxy.ts`** and is re-exported from **`src/middleware.ts`** (Next.js 15 still resolves `middleware.ts`).
-- **Clerk MCP (Cursor)**: use MCP server **`user-clerk`**. Tools: **`list_clerk_sdk_snippets`** (optional `tag`, e.g. `auth`), **`clerk_sdk_snippet`** with **`slug`** (e.g. `server-auth-nextjs`, `show-component`, or bundle `server-side`). Confirms: `clerkMiddleware()` + App Router; `<Show>` needs **`@clerk/nextjs` ≥ 7** (we use 7.x).
+- **License middleware**: **`src/proxy.ts`** (re-exported from **`src/middleware.ts`**) handles Envato license gating when enabled.
 - **Envato license + domain registry**: `POST /api/license/verify` (optional `domain`) verifies the code via Envato and sets the license cookie; with **`SUPABASE_SERVICE_ROLE_KEY`** it upserts **`envato_domain_licenses`** (apply **`supabase/manual_apply_envato_domain_licenses.sql`**). Super admins manage rows at **`/saas-admin/envato-licenses`**. Env: **`ENVATO_API_TOKEN`**, **`ENVATO_ITEM_ID`**, **`LICENSE_SECRET`**, optional **`LICENSE_GATE_ENABLED`**, **`LICENSE_REQUIRE_DOMAIN`**, **`SUPABASE_SERVICE_ROLE_KEY`**.
 
 ## Phase 2 (done) — real App Router
