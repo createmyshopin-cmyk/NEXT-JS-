@@ -31,11 +31,16 @@ import { ALLOWED_LANDING_THEME_VARS, type LandingThemePreset } from "@/lib/marke
 import { presetLabel } from "@/lib/marketplace-manifest";
 import { Badge } from "@/components/ui/badge";
 import {
-  ChevronRight, ImageIcon, LayoutTemplate, Link as LinkIcon, Loader2, Monitor, Pencil, Plus, Smartphone, Tablet, Trash2, Upload, X,
+  ChevronRight, ImageIcon, LayoutTemplate, Link as LinkIcon, Loader2, Monitor, Plus, Smartphone, Tablet, Upload, X,
 } from "lucide-react";
 import Link from "next/link";
 import { Tabs as ImgTabs, TabsContent as ImgTabsContent, TabsList as ImgTabsList, TabsTrigger as ImgTabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { arrayMove } from "@dnd-kit/sortable";
+import { ThemeHeroSortable } from "./ThemeHeroSortable";
+import type { HeroBanner } from "./theme-editor-hero-types";
+
+export type { HeroBanner } from "./theme-editor-hero-types";
 
 type Device = "mobile" | "tablet" | "desktop";
 
@@ -43,17 +48,6 @@ const DEVICE: Record<Device, { w: number; label: string; icon: ComponentType<{ c
   mobile: { w: 375, label: "Mobile", icon: Smartphone, frame: "rounded-[28px] border-[6px]" },
   tablet: { w: 834, label: "Tablet", icon: Tablet, frame: "rounded-[20px] border-[8px]" },
   desktop: { w: 1280, label: "Desktop", icon: Monitor, frame: "rounded-xl border-4" },
-};
-
-type HeroBanner = {
-  id: string;
-  title: string;
-  subtitle: string | null;
-  cta_text: string | null;
-  cta_link: string | null;
-  image_url: string | null;
-  is_active: boolean;
-  sort_order: number;
 };
 
 type HeroForm = Omit<HeroBanner, "id">;
@@ -84,6 +78,8 @@ type ThemeEditorCtx = {
   openEdit: (b: HeroBanner) => void;
   saveBanner: () => Promise<void>;
   confirmDelete: () => Promise<void>;
+  reorderHeroBanners: (activeId: string, overId: string | null) => Promise<void>;
+  reordering: boolean;
 };
 
 const ThemeEditorContext = createContext<ThemeEditorCtx | null>(null);
@@ -368,6 +364,9 @@ function useThemeEditorState(): ThemeEditorCtx {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
+  const bannersRef = useRef(banners);
+  bannersRef.current = banners;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -460,6 +459,34 @@ function useThemeEditorState(): ThemeEditorCtx {
     }
   }, [deleteId, load]);
 
+  const reorderHeroBanners = useCallback(
+    async (activeId: string, overId: string | null) => {
+      if (!overId || activeId === overId) return;
+      const prev = bannersRef.current;
+      const oldIndex = prev.findIndex((b) => b.id === activeId);
+      const newIndex = prev.findIndex((b) => b.id === overId);
+      if (oldIndex < 0 || newIndex < 0) return;
+      const next = arrayMove(prev, oldIndex, newIndex).map((b, i) => ({ ...b, sort_order: i }));
+      setBanners(next);
+      setReordering(true);
+      try {
+        const results = await Promise.all(
+          next.map((b) =>
+            (supabase.from("banners") as any).update({ sort_order: b.sort_order }).eq("id", b.id)
+          )
+        );
+        const failed = results.find((r) => r.error);
+        if (failed?.error) {
+          toast({ title: "Reorder failed", description: failed.error.message, variant: "destructive" });
+          load();
+        }
+      } finally {
+        setReordering(false);
+      }
+    },
+    [load]
+  );
+
   return {
     banners,
     loading,
@@ -476,6 +503,8 @@ function useThemeEditorState(): ThemeEditorCtx {
     openEdit,
     saveBanner,
     confirmDelete,
+    reorderHeroBanners,
+    reordering,
   };
 }
 
@@ -543,6 +572,8 @@ export function ThemeHeroSection() {
     openCreate,
     openEdit,
     setDeleteId,
+    reorderHeroBanners,
+    reordering,
   } = useThemeEditor();
 
   return (
@@ -554,10 +585,10 @@ export function ThemeHeroSection() {
             Hero & images
           </CardTitle>
           <CardDescription>
-            Edit headline, text, CTA, and images. Replace or clear images anytime.
+            Drag slides by the handle to reorder (carousel order updates in the live preview). Edit headline, CTA, and images anytime.
           </CardDescription>
         </div>
-        <Button size="sm" onClick={openCreate}>
+        <Button size="sm" onClick={openCreate} disabled={reordering}>
           <Plus className="h-4 w-4 mr-1" /> Add slide
         </Button>
       </CardHeader>
@@ -566,37 +597,18 @@ export function ThemeHeroSection() {
           <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg border-dashed">
             No hero slides yet. Add one to show imagery and copy in the preview above.
           </p>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {banners.map((b) => (
-              <div
-                key={b.id}
-                className={cn(
-                  "rounded-xl border overflow-hidden flex flex-col",
-                  !b.is_active && "opacity-50"
-                )}
-              >
-                <div className="relative h-28 bg-muted">
-                  {b.image_url ? (
-                    <img src={b.image_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground text-xs">No image</div>
-                  )}
-                </div>
-                <div className="p-3 flex-1 flex flex-col gap-2">
-                  <p className="font-medium text-sm line-clamp-2">{b.title || "Untitled"}</p>
-                  <div className="flex gap-1 mt-auto">
-                    <Button variant="secondary" size="sm" className="flex-1" onClick={() => openEdit(b)}>
-                      <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteId(b.id)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
+        ) : loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
+        ) : (
+          <ThemeHeroSortable
+            banners={banners}
+            reordering={reordering}
+            reorderHeroBanners={reorderHeroBanners}
+            openEdit={openEdit}
+            setDeleteId={setDeleteId}
+          />
         )}
         <p className="text-xs text-muted-foreground">
           Promo & announcement strips:{" "}

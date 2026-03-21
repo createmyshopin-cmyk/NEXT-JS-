@@ -11,6 +11,7 @@ import { clearSiteSettingsCache } from "@/hooks/useSiteSettings";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 import { useRouter } from "next/navigation";
 import { Loader2, Palette, Store } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeEditorProvider, ThemeHeroSection, ThemePreviewSection } from "@/components/admin/ThemeEditorPanel";
 import {
   ALLOWED_LANDING_THEME_VARS,
@@ -135,89 +136,98 @@ export default function AdminTheme() {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Palette className="h-7 w-7 text-primary" />
-          Theme
+          Theme builder
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Preset and colors update the live preview instantly. Save to apply on your public site. Hero slides and images can be edited below.
+          Appearance and hero slides update the live preview in real time. Save theme to publish colors on your public site.
         </p>
       </div>
 
       <ThemeEditorProvider>
       <div className="grid lg:grid-cols-2 gap-6 items-start">
-      <Card>
-        <CardHeader>
-          <CardTitle>Landing page preset</CardTitle>
-          <CardDescription>Built-in styles for your site shell. Optional color overrides apply on top of the preset.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-            {PRESET_OPTIONS.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setPreset(p.id)}
-                className={cn(
-                  "rounded-lg border p-3 text-left transition-colors",
-                  preset === p.id ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "border-border hover:bg-muted/50"
-                )}
-              >
-                <div className="font-medium text-sm">{p.label}</div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">{p.hint}</div>
-              </button>
-            ))}
-          </div>
+      <Tabs defaultValue="appearance" className="min-w-0 w-full space-y-4">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="hero">Hero slides</TabsTrigger>
+        </TabsList>
+        <TabsContent value="appearance" className="mt-0 space-y-0 outline-none">
+          <Card>
+            <CardHeader>
+              <CardTitle>Landing page preset</CardTitle>
+              <CardDescription>Built-in styles for your site shell. Optional color overrides apply on top of the preset.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                {PRESET_OPTIONS.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setPreset(p.id)}
+                    className={cn(
+                      "rounded-lg border p-3 text-left transition-colors",
+                      preset === p.id ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "border-border hover:bg-muted/50"
+                    )}
+                  >
+                    <div className="font-medium text-sm">{p.label}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{p.hint}</div>
+                  </button>
+                ))}
+              </div>
 
-          <div className="space-y-3">
-            <Label className="text-base">Color tokens (optional)</Label>
-            <p className="text-xs text-muted-foreground">Leave blank to use preset defaults only.</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {ALLOWED_LANDING_THEME_VARS.map((key) => (
-                <div key={key} className="space-y-1">
-                  <Label htmlFor={key} className="text-xs font-mono text-muted-foreground">
-                    {key}
-                  </Label>
-                  {key === "--radius" ? (
-                    <Input
-                      id={key}
-                      placeholder="e.g. 0.5rem"
-                      value={tokenInputs[key] ?? ""}
-                      onChange={(e) => setTokenInputs((prev) => ({ ...prev, [key]: e.target.value }))}
-                    />
-                  ) : (
-                    <div className="flex gap-2">
-                      <Input
-                        id={key}
-                        className="min-w-0 flex-1 font-mono text-sm"
-                        placeholder="e.g. 199 89% 48%"
-                        value={tokenInputs[key] ?? ""}
-                        onChange={(e) => setTokenInputs((prev) => ({ ...prev, [key]: e.target.value }))}
-                      />
-                      <input
-                        type="color"
-                        aria-label={`Pick color for ${key}`}
-                        className="h-9 w-10 shrink-0 cursor-pointer rounded-md border border-input bg-background p-0.5"
-                        value={pickerHexForTokenValue(tokenInputs[key] ?? "")}
-                        onChange={(e) =>
-                          setTokenInputs((prev) => ({ ...prev, [key]: hexToHslSpaceString(e.target.value) }))
-                        }
-                      />
+              <div className="space-y-3">
+                <Label className="text-base">Color tokens (optional)</Label>
+                <p className="text-xs text-muted-foreground">Leave blank to use preset defaults only.</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {ALLOWED_LANDING_THEME_VARS.map((key) => (
+                    <div key={key} className="space-y-1">
+                      <Label htmlFor={key} className="text-xs font-mono text-muted-foreground">
+                        {key}
+                      </Label>
+                      {key === "--radius" ? (
+                        <Input
+                          id={key}
+                          placeholder="e.g. 0.5rem"
+                          value={tokenInputs[key] ?? ""}
+                          onChange={(e) => setTokenInputs((prev) => ({ ...prev, [key]: e.target.value }))}
+                        />
+                      ) : (
+                        <div className="flex gap-2">
+                          <Input
+                            id={key}
+                            className="min-w-0 flex-1 font-mono text-sm"
+                            placeholder="e.g. 199 89% 48%"
+                            value={tokenInputs[key] ?? ""}
+                            onChange={(e) => setTokenInputs((prev) => ({ ...prev, [key]: e.target.value }))}
+                          />
+                          <input
+                            type="color"
+                            aria-label={`Pick color for ${key}`}
+                            className="h-9 w-10 shrink-0 cursor-pointer rounded-md border border-input bg-background p-0.5"
+                            value={pickerHexForTokenValue(tokenInputs[key] ?? "")}
+                            onChange={(e) =>
+                              setTokenInputs((prev) => ({ ...prev, [key]: hexToHslSpaceString(e.target.value) }))
+                            }
+                          />
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          <Button onClick={save} disabled={saving || !siteId}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save theme"}
-          </Button>
-        </CardContent>
-      </Card>
+              <Button onClick={save} disabled={saving || !siteId}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save theme"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="hero" className="mt-0 outline-none">
+          <ThemeHeroSection />
+        </TabsContent>
+      </Tabs>
 
       <ThemePreviewSection preset={preset} tokenInputs={tokenInputs} themeDirty={themeDirty} />
       </div>
-
-      <ThemeHeroSection />
 
       </ThemeEditorProvider>
 
