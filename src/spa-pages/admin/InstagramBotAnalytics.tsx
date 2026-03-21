@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MessageSquare, MessageCircle, Users, TrendingUp } from "lucide-react";
+import { MessageSquare, MessageCircle, Users, TrendingUp, Link2 } from "lucide-react";
 
 interface ChannelStats {
   channel: string;
@@ -15,6 +15,13 @@ export default function InstagramBotAnalytics() {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [timeRange, setTimeRange] = useState("7d");
   const [loading, setLoading] = useState(true);
+  const [followerFunnel, setFollowerFunnel] = useState({
+    checked: 0,
+    followsTrue: 0,
+    followsFalse: 0,
+    followsUnknown: 0,
+  });
+  const [flowFunnels, setFlowFunnels] = useState({ linkSent: 0, blocked: 0 });
 
   useEffect(() => {
     fetchAnalytics();
@@ -60,13 +67,41 @@ export default function InstagramBotAnalytics() {
     setRecentActivity(rows.slice(0, 100));
 
     const statsMap: Record<string, ChannelStats> = {};
+    let checked = 0;
+    let followsTrue = 0;
+    let followsFalse = 0;
+    let followsUnknown = 0;
+    let linkSent = 0;
+    let blocked = 0;
     for (const r of rows) {
       const ch = r.channel || "dm";
       if (!statsMap[ch]) statsMap[ch] = { channel: ch, total: 0, leads: 0 };
       statsMap[ch].total++;
       if (r.lead_id) statsMap[ch].leads++;
+      const meta = r.meta as Record<string, unknown> | null;
+      if (meta?.flow_funnel === "link_sent_follower") linkSent++;
+      if (meta?.flow_funnel === "blocked_not_following") blocked++;
+      if (r.follower_check) {
+        checked++;
+        const fc = String(r.follower_check);
+        if (fc === "follower") followsTrue++;
+        else if (fc === "not_following") followsFalse++;
+        else if (fc === "unknown") followsUnknown++;
+        else {
+          try {
+            const p = JSON.parse(fc);
+            if (p.follows === true) followsTrue++;
+            else if (p.follows === false) followsFalse++;
+            else followsUnknown++;
+          } catch {
+            followsUnknown++;
+          }
+        }
+      }
     }
     setChannelStats(Object.values(statsMap));
+    setFollowerFunnel({ checked, followsTrue, followsFalse, followsUnknown });
+    setFlowFunnels({ linkSent, blocked });
     setLoading(false);
   };
 
@@ -122,6 +157,72 @@ export default function InstagramBotAnalytics() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Follower checks (flows)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : followerFunnel.checked === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No follower condition evaluations in this range. They appear when a published flow includes a follower condition.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div>
+                <div className="text-muted-foreground text-xs">Evaluated</div>
+                <div className="text-xl font-semibold">{followerFunnel.checked}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground text-xs">Follows (true)</div>
+                <div className="text-xl font-semibold text-green-600">{followerFunnel.followsTrue}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground text-xs">Not following</div>
+                <div className="text-xl font-semibold text-amber-600">{followerFunnel.followsFalse}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground text-xs">Unknown</div>
+                <div className="text-xl font-semibold">{followerFunnel.followsUnknown}</div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Link2 className="h-4 w-4" />
+            Flow funnels (send link)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : flowFunnels.linkSent + flowFunnels.blocked === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No send-link funnel events yet. When a published flow resolves to <strong>send link</strong>, we log whether the link was sent to a verified follower or blocked.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-3">
+                <div className="text-muted-foreground text-xs">Link sent (follower verified)</div>
+                <div className="text-2xl font-semibold text-green-600">{flowFunnels.linkSent}</div>
+              </div>
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <div className="text-muted-foreground text-xs">Blocked (not following / unknown)</div>
+                <div className="text-2xl font-semibold text-amber-700">{flowFunnels.blocked}</div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>

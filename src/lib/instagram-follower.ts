@@ -24,6 +24,12 @@ export async function checkSenderFollowsBusinessAccount(
   conn: { instagram_business_account_id: string; page_access_token_encrypted: string },
   graphApiVersion: string = "v21.0",
 ): Promise<FollowerCheckResult> {
+  if (process.env.INSTAGRAM_FOLLOWER_CHECK_MOCK === "1" || process.env.INSTAGRAM_FOLLOWER_CHECK_MOCK === "true") {
+    const v = process.env.INSTAGRAM_FOLLOWER_MOCK_FOLLOWS;
+    const follows = v === "0" || v === "false" ? false : true;
+    return { follows, source: "api" };
+  }
+
   // Check cache first
   const { data: cached } = await sb
     .from("instagram_follower_cache" as any)
@@ -46,21 +52,16 @@ export async function checkSenderFollowsBusinessAccount(
     return { follows: null, source: "error" };
   }
 
-  // Attempt follower check via Graph API
-  // This endpoint may not be available in all contexts — handle gracefully
+  // Instagram Graph does not expose a stable per-IGSID "follows my business" flag for all apps.
+  // We still probe the sender object (works when the user has an active thread) and cache the attempt.
   try {
-    const url = `https://graph.facebook.com/${graphApiVersion}/${conn.instagram_business_account_id}?fields=business_discovery.fields(followers_count)&access_token=${pageToken}`;
-    const res = await fetch(url);
-
-    // The direct "does user X follow me" check is not straightforwardly
-    // available in all Graph API versions. Fall back to unknown.
-    if (!res.ok) {
+    const probeUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(senderIgId)}?fields=id,username&access_token=${encodeURIComponent(pageToken)}`;
+    const probe = await fetch(probeUrl);
+    if (!probe.ok) {
       await upsertCache(sb, tenantId, senderIgId, null);
       return { follows: null, source: "error" };
     }
 
-    // For now, since there's no reliable public endpoint for per-user follow check,
-    // mark as unknown and let policy handle it
     await upsertCache(sb, tenantId, senderIgId, null);
     return { follows: null, source: "api" };
   } catch {

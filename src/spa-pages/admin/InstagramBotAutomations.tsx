@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, Save, Image } from "lucide-react";
+import { FlowBuilder } from "@/components/admin/instagram-bot/FlowBuilder";
 
 interface KeywordRule {
   id?: string;
@@ -147,10 +148,11 @@ export default function InstagramBotAutomations() {
       </div>
 
       <Tabs defaultValue="keywords">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="keywords">Keywords</TabsTrigger>
           <TabsTrigger value="media">Posts & Reels</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
+          <TabsTrigger value="flow">Flow Builder</TabsTrigger>
         </TabsList>
 
         <TabsContent value="keywords" className="mt-4 space-y-4">
@@ -297,6 +299,13 @@ export default function InstagramBotAutomations() {
               </p>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="flow" className="mt-4 space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Build visual flows that run before flat keyword rules. Publish a flow to activate it; drafts are ignored by the webhook.
+          </p>
+          {tenantId ? <FlowBuilder tenantId={tenantId} /> : null}
         </TabsContent>
       </Tabs>
     </div>

@@ -5,6 +5,9 @@ import { getMetaPlatformCredentials } from "@/lib/meta-credentials";
 import { checkInstagramEntitlement } from "@/lib/instagram-entitlement";
 import { generateDmReply } from "@/lib/instagram-ai";
 import { decrypt } from "@/lib/encryption";
+import { evaluateFlowDefinition, type FlowDefinition, type FlowVisit } from "@/lib/flow-engine";
+import { checkSenderFollowsBusinessAccount } from "@/lib/instagram-follower";
+import { followerFollowsToPlanValue } from "@/lib/instagram-follower-check";
 
 const TOKEN_KEY_ENV = "INSTAGRAM_TOKEN_ENCRYPTION_KEY";
 
@@ -59,6 +62,160 @@ export async function POST(req: NextRequest) {
   processWebhook(payload, creds, start).catch((err) => console.error("[instagram-webhook] Error:", err));
 
   return NextResponse.json({ status: "ok" });
+}
+
+async function logFlowExecutionRows(
+  sb: any,
+  tenantId: string,
+  flowId: string,
+  visited: FlowVisit[],
+  senderIgId: string,
+) {
+  if (!visited?.length) return;
+  const rows = visited.map((v) => ({
+    tenant_id: tenantId,
+    flow_id: flowId,
+    node_id: v.nodeId,
+    passed: v.passed,
+    meta: v.meta ?? {},
+    event_type: "node_visit",
+    sender_ig_id: senderIgId || null,
+    result:
+      v.passed === true ? "pass" : v.passed === false ? "fail" : v.passed === null ? "action" : "unknown",
+  }));
+  await sb.from("instagram_flow_executions").insert(rows);
+}
+
+async function resolveSendLinkFollowerGate(
+  sb: any,
+  tenantId: string,
+  senderIgId: string,
+  conn: { instagram_business_account_id: string; page_access_token_encrypted: string },
+  graphVersion: string,
+  existing?: { follows: boolean | null; source?: string },
+): Promise<{ allowed: boolean; follows: boolean | null; source?: string }> {
+  if (existing?.follows === true) {
+    return { allowed: true, follows: true, source: existing.source };
+  }
+  const r = await checkSenderFollowsBusinessAccount(
+    sb,
+    tenantId,
+    senderIgId,
+    {
+      instagram_business_account_id: conn.instagram_business_account_id,
+      page_access_token_encrypted: conn.page_access_token_encrypted,
+    },
+    graphVersion,
+  );
+  return { allowed: r.follows === true, follows: r.follows, source: r.source };
+}
+
+function channelMatchesFlow(rowChannel: string, channel: "dm" | "comment" | "story"): boolean {
+  const c = (rowChannel || "dm").toLowerCase();
+  if (c === "all") return true;
+  return c === channel;
+}
+
+async function tryFlows(
+  sb: any,
+  tenantId: string,
+  channel: "dm" | "comment" | "story",
+  messageText: string,
+  senderIgId: string,
+  conn: {
+    instagram_business_account_id: string;
+    page_access_token_encrypted: string;
+  },
+  graphVersion: string,
+  isFirstMessage: boolean,
+): Promise<{
+  action: import("@/lib/flow-engine").ResolvedFlowAction | null;
+  flowId: string | null;
+  visited: FlowVisit[];
+  followerCheck?: import("@/lib/flow-engine").FlowEvalResult["followerCheck"];
+}> {
+  const { data: flowRows } = await sb
+    .from("instagram_automation_flows")
+    .select("id,flow_definition,channel,version")
+    .eq("tenant_id", tenantId)
+    .eq("enabled", true)
+    .eq("is_draft", false)
+    .order("version", { ascending: false });
+
+  const ctx = { channel, messageText, senderIgId, tenantId, now: new Date(), isFirstMessage };
+
+  for (const row of flowRows ?? []) {
+    if (!channelMatchesFlow(String(row.channel), channel)) continue;
+    const def = row.flow_definition as FlowDefinition;
+    const result = await evaluateFlowDefinition(def, ctx, {
+      checkFollower: async () => {
+        const r = await checkSenderFollowsBusinessAccount(
+          sb,
+          tenantId,
+          senderIgId,
+          {
+            instagram_business_account_id: conn.instagram_business_account_id,
+            page_access_token_encrypted: conn.page_access_token_encrypted,
+          },
+          graphVersion,
+        );
+        return { follows: r.follows, source: r.source };
+      },
+    });
+    if (result.action) {
+      await logFlowExecutionRows(sb, tenantId, row.id, result.visited, senderIgId);
+      return {
+        action: result.action,
+        flowId: row.id,
+        visited: result.visited,
+        followerCheck: result.followerCheck,
+      };
+    }
+  }
+  return { action: null, flowId: null, visited: [] };
+}
+
+function matchDbKeywordRule(rule: any, text: string, channel: string): boolean {
+  if (!rule.enabled) return false;
+  if (rule.channel && rule.channel !== channel) return false;
+  const matches = Array.isArray(rule.match) ? rule.match : [rule.match];
+  const normalizedText = text.toLowerCase().trim();
+  return matches.some((m: string) => {
+    const needle = (rule.case_sensitive ? m : m.toLowerCase()).trim();
+    const haystack = rule.case_sensitive ? text.trim() : normalizedText;
+    if (rule.match_type === "exact") return haystack === needle;
+    if (rule.match_type === "whole_word") {
+      return new RegExp(`\\b${needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, rule.case_sensitive ? "" : "i").test(
+        text,
+      );
+    }
+    return haystack.includes(needle);
+  });
+}
+
+async function loadKeywordRulesAction(
+  sb: any,
+  tenantId: string,
+  channel: "dm" | "comment",
+  text: string,
+): Promise<{ action: string; template_text: string; url: string } | null> {
+  const { data: dbRules } = await sb
+    .from("instagram_automation_keyword_rules")
+    .select("*")
+    .eq("tenant_id", tenantId)
+    .eq("enabled", true)
+    .order("priority", { ascending: true });
+
+  for (const rule of dbRules ?? []) {
+    if (matchDbKeywordRule(rule, text, channel)) {
+      return {
+        action: rule.action || "ai_reply",
+        template_text: rule.template_text || "",
+        url: rule.url || "",
+      };
+    }
+  }
+  return null;
 }
 
 async function processWebhook(payload: any, creds: any, start: number) {
@@ -130,16 +287,47 @@ async function handleMessaging(sb: any, event: any, creds: any, start: number) {
   const dmConfig = settings.channels?.dm ?? {};
   if (dmConfig.enabled === false) return;
 
-  // Schedule check (Phase 2 — stub, always passes)
-  // Keyword check (Phase 2 — stub, falls through to AI)
+  const graphVersion = creds.graphApiVersion || "v21.0";
 
-  const systemPrompt = aiSettings?.system_prompt || "You are a helpful travel assistant.";
-  const model = aiSettings?.ai_model || process.env.INSTAGRAM_DM_MODEL || "gpt-4o-mini";
+  const { count: priorDmCount } = await sb
+    .from("instagram_channel_activity")
+    .select("*", { count: "exact", head: true })
+    .eq("tenant_id", conn.tenant_id)
+    .eq("sender_ig_id", senderId)
+    .eq("channel", "dm");
+  const isFirstDmMessage = (priorDmCount ?? 0) === 0;
 
-  // Generate AI reply
-  const aiResult = await generateDmReply(message.text, systemPrompt, { model });
+  const flowHit = await tryFlows(
+    sb,
+    conn.tenant_id,
+    "dm",
+    message.text,
+    senderId,
+    conn,
+    graphVersion,
+    isFirstDmMessage,
+  );
 
-  // Send reply via Graph API
+  const followerCheckPlan = flowHit.followerCheck
+    ? followerFollowsToPlanValue(flowHit.followerCheck.follows)
+    : null;
+  const followerDetail = flowHit.followerCheck
+    ? { follows: flowHit.followerCheck.follows, source: flowHit.followerCheck.source }
+    : null;
+
+  let action = flowHit.action?.type ?? "ai_reply";
+  let templateText = flowHit.action?.templateText ?? "";
+  let url = flowHit.action?.url ?? "";
+
+  if (!flowHit.action) {
+    const kr = await loadKeywordRulesAction(sb, conn.tenant_id, "dm", message.text);
+    if (kr) {
+      action = kr.action;
+      templateText = kr.template_text;
+      url = kr.url;
+    }
+  }
+
   let pageToken = "";
   try {
     pageToken = decrypt(conn.page_access_token_encrypted, TOKEN_KEY_ENV);
@@ -148,8 +336,90 @@ async function handleMessaging(sb: any, event: any, creds: any, start: number) {
     return;
   }
 
-  const graphVersion = creds.graphApiVersion || "v21.0";
   const sendUrl = `https://graph.facebook.com/${graphVersion}/${conn.facebook_page_id}/messages`;
+  const activityBase = {
+    tenant_id: conn.tenant_id,
+    channel: "dm",
+    sender_ig_id: senderId,
+    follower_check: followerCheckPlan,
+    meta: {
+      mid,
+      flow_id: flowHit.flowId,
+      resolution: flowHit.flowId ? "flow" : "keyword_or_ai",
+      follower_check_detail: followerDetail,
+    },
+  };
+
+  if (action === "suppress") {
+    await sb.from("instagram_channel_activity").insert({
+      ...activityBase,
+      event_type: "suppressed",
+      latency_ms: Date.now() - start,
+      lead_id: null,
+    });
+    return;
+  }
+
+  if (action === "template_reply" || action === "send_link") {
+    let bodyText =
+      action === "send_link" && url
+        ? `${templateText ? `${templateText}\n` : ""}${url}`.trim()
+        : (templateText || "Thanks for your message!");
+    let metaExtra: Record<string, unknown> = { action };
+    let followerColForRow = followerCheckPlan;
+
+    if (action === "send_link") {
+      const gate = await resolveSendLinkFollowerGate(
+        sb,
+        conn.tenant_id,
+        senderId,
+        conn,
+        graphVersion,
+        flowHit.followerCheck,
+      );
+      followerColForRow = followerFollowsToPlanValue(gate.follows);
+      metaExtra.follower_check_detail = { follows: gate.follows, source: gate.source };
+
+      if (!gate.allowed) {
+        bodyText =
+          templateText?.trim() ||
+          "Follow our Instagram account, then message again and we’ll send you the link.";
+        metaExtra.flow_funnel = "blocked_not_following";
+        metaExtra.send_link_blocked = true;
+      } else {
+        metaExtra.flow_funnel = "link_sent_follower";
+      }
+    }
+
+    const sendRes = await fetch(sendUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recipient: { id: senderId },
+        message: { text: bodyText },
+        messaging_type: "RESPONSE",
+        access_token: pageToken,
+      }),
+    });
+    if (!sendRes.ok) {
+      console.error("[instagram-webhook] Send failed:", sendRes.status, await sendRes.text());
+    }
+    const latency = Date.now() - start;
+    await sb.from("instagram_channel_activity").insert({
+      ...activityBase,
+      follower_check: action === "send_link" ? followerColForRow : activityBase.follower_check,
+      event_type: "message_replied",
+      latency_ms: latency,
+      lead_id: null,
+      meta: { ...activityBase.meta, ...metaExtra },
+    });
+    return;
+  }
+
+  const systemPrompt = aiSettings?.system_prompt || "You are a helpful travel assistant.";
+  const model = aiSettings?.ai_model || process.env.INSTAGRAM_DM_MODEL || "gpt-4o-mini";
+
+  const aiResult = await generateDmReply(message.text, systemPrompt, { model });
 
   const sendRes = await fetch(sendUrl, {
     method: "POST",
@@ -168,7 +438,6 @@ async function handleMessaging(sb: any, event: any, creds: any, start: number) {
 
   const latency = Date.now() - start;
 
-  // Insert lead if qualified
   let leadId: string | null = null;
   if (aiResult.qualified) {
     const { data: lead } = await sb
@@ -187,19 +456,16 @@ async function handleMessaging(sb: any, event: any, creds: any, start: number) {
     leadId = lead?.id ?? null;
   }
 
-  // Log activity
   await sb.from("instagram_channel_activity").insert({
-    tenant_id: conn.tenant_id,
-    channel: "dm",
+    ...activityBase,
     event_type: aiResult.qualified ? "lead_captured" : "message_replied",
-    sender_ig_id: senderId,
     lead_id: leadId,
     latency_ms: latency,
-    meta: { mid, qualified: aiResult.qualified },
+    meta: { ...activityBase.meta, qualified: aiResult.qualified },
   });
 }
 
-async function handleChange(sb: any, entry: any, change: any, _creds: any, start: number) {
+async function handleChange(sb: any, entry: any, change: any, creds: any, start: number) {
   if (change.field !== "comments" && change.field !== "feed") return;
 
   const value = change.value;
@@ -264,26 +530,41 @@ async function handleChange(sb: any, entry: any, change: any, _creds: any, start
 
   if ((totalTargets ?? 0) > 0 && !mediaTarget) return;
 
-  // Keyword evaluation (Phase 2)
-  const keywordRules = settings.keyword_rules ?? [];
-  let action = "ai_reply";
-  let templateText = "";
+  const graphVersion = creds?.graphApiVersion || "v21.0";
+  const sid = senderId || "";
+  const { count: priorCommentCount } = await sb
+    .from("instagram_channel_activity")
+    .select("*", { count: "exact", head: true })
+    .eq("tenant_id", conn.tenant_id)
+    .eq("sender_ig_id", sid)
+    .eq("channel", "comment");
+  const isFirstComment = (priorCommentCount ?? 0) === 0;
 
-  const normalizedText = text.toLowerCase().trim();
-  for (const rule of keywordRules) {
-    if (rule.channel && rule.channel !== "comment") continue;
-    if (!rule.enabled) continue;
-    const matches = Array.isArray(rule.match) ? rule.match : [rule.match];
-    const hit = matches.some((m: string) => {
-      const needle = (rule.case_sensitive ? m : m.toLowerCase()).trim();
-      if (rule.match_type === "exact") return normalizedText === needle;
-      if (rule.match_type === "whole_word") return new RegExp(`\\b${needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(text);
-      return normalizedText.includes(needle);
-    });
-    if (hit) {
-      action = rule.action || "ai_reply";
-      templateText = rule.template_text || "";
-      break;
+  const flowHit = await tryFlows(
+    sb,
+    conn.tenant_id,
+    "comment",
+    text,
+    sid,
+    conn,
+    graphVersion,
+    isFirstComment,
+  );
+  const followerCheckPlan = flowHit.followerCheck
+    ? followerFollowsToPlanValue(flowHit.followerCheck.follows)
+    : null;
+  const followerDetail = flowHit.followerCheck
+    ? { follows: flowHit.followerCheck.follows, source: flowHit.followerCheck.source }
+    : null;
+
+  let action = flowHit.action?.type ?? "ai_reply";
+  let templateText = flowHit.action?.templateText ?? "";
+
+  if (!flowHit.action) {
+    const kr = await loadKeywordRulesAction(sb, conn.tenant_id, "comment", text);
+    if (kr) {
+      action = kr.action;
+      templateText = kr.template_text;
     }
   }
 
@@ -295,8 +576,17 @@ async function handleChange(sb: any, entry: any, change: any, _creds: any, start
     tenant_id: conn.tenant_id,
     channel: "comment",
     event_type: "comment_received",
-    sender_ig_id: senderId || null,
+    sender_ig_id: sid || null,
     latency_ms: latency,
-    meta: { comment_id: commentId, media_id: mediaId, action, text: text.slice(0, 500) },
+    follower_check: followerCheckPlan,
+    meta: {
+      comment_id: commentId,
+      media_id: mediaId,
+      action,
+      text: text.slice(0, 500),
+      flow_id: flowHit.flowId,
+      template_preview: templateText?.slice(0, 200),
+      follower_check_detail: followerDetail,
+    },
   });
 }
