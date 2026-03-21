@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/integrations/supabase/service-role";
 import { getMetaPlatformCredentials } from "@/lib/meta-credentials";
+import { parseInstagramOAuthState } from "@/lib/instagram-oauth-state";
 import { encrypt } from "@/lib/encryption";
 
 const TOKEN_KEY_ENV = "INSTAGRAM_TOKEN_ENCRYPTION_KEY";
 
-/** Meta OAuth callback: exchange code for tokens, store connection. */
+/** Meta OAuth callback: exchange code for tokens, store connection. Supports Instagram Business Login and Facebook Login. */
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
   const state = req.nextUrl.searchParams.get("state");
@@ -15,13 +16,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=oauth_denied", req.nextUrl.origin));
   }
 
-  const tenantId = state.split(":")[0];
-  if (!tenantId) {
+  const parsed = parseInstagramOAuthState(state);
+  if (!parsed?.tenantId) {
     return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=invalid_state", req.nextUrl.origin));
   }
 
+  const { tenantId, flow } = parsed;
+
   const creds = await getMetaPlatformCredentials();
-  if (!creds.metaAppId || !creds.metaAppSecret) {
+  if (!creds.metaAppSecret) {
     return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=meta_not_configured", req.nextUrl.origin));
   }
 
@@ -29,7 +32,94 @@ export async function GET(req: NextRequest) {
   const graphVersion = creds.graphApiVersion || "v25.0";
 
   try {
-    // Exchange code for short-lived token
+    if (flow === "instagram") {
+      const igId = creds.instagramAppId?.trim();
+      if (!igId) {
+        return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=meta_not_configured", req.nextUrl.origin));
+      }
+
+      const tokenRes = await fetch("https://api.instagram.com/oauth/access_token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: igId,
+          client_secret: creds.metaAppSecret,
+          grant_type: "authorization_code",
+          redirect_uri: redirectUri,
+          code,
+        }),
+      });
+
+      if (!tokenRes.ok) {
+        console.error("[instagram-oauth] Instagram token exchange failed:", await tokenRes.text());
+        return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=token_exchange_failed", req.nextUrl.origin));
+      }
+
+      const tokenJson = (await tokenRes.json()) as { access_token: string; user_id?: string };
+      const shortToken = tokenJson.access_token;
+      if (!shortToken) {
+        return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=token_exchange_failed", req.nextUrl.origin));
+      }
+
+      const longUrl = `https://graph.instagram.com/access_token?${new URLSearchParams({
+        grant_type: "ig_exchange_token",
+        client_secret: creds.metaAppSecret,
+        access_token: shortToken,
+      })}`;
+      const longRes = await fetch(longUrl);
+      const longData = longRes.ok
+        ? ((await longRes.json()) as { access_token: string; expires_in?: number })
+        : { access_token: shortToken, expires_in: undefined };
+
+      const longToken = longData.access_token;
+      const expiresAt = longData.expires_in
+        ? new Date(Date.now() + longData.expires_in * 1000).toISOString()
+        : null;
+
+      let igBizId = "";
+      let igUsername = "";
+      const meUrl = `https://graph.instagram.com/${graphVersion}/me?fields=id,username&access_token=${encodeURIComponent(longToken)}`;
+      const meRes = await fetch(meUrl);
+      if (meRes.ok) {
+        const me = (await meRes.json()) as { id?: string; username?: string };
+        igBizId = me.id || "";
+        igUsername = me.username || "";
+      }
+      if (!igBizId && tokenJson.user_id) {
+        igBizId = String(tokenJson.user_id);
+      }
+      if (!igBizId) {
+        return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=no_instagram_account", req.nextUrl.origin));
+      }
+
+      const encryptedToken = encrypt(longToken, TOKEN_KEY_ENV);
+      const sb = createServiceRoleClient();
+
+      await sb.from("tenant_instagram_connections" as any).upsert(
+        {
+          tenant_id: tenantId,
+          facebook_page_id: igBizId,
+          instagram_business_account_id: igBizId,
+          page_access_token_encrypted: encryptedToken,
+          token_expires_at: expiresAt,
+          ig_username: igUsername,
+          updated_at: new Date().toISOString(),
+        } as any,
+        { onConflict: "tenant_id" },
+      );
+
+      await sb.from("instagram_automation_config" as any).upsert(
+        { tenant_id: tenantId } as any,
+        { onConflict: "tenant_id" },
+      );
+
+      return NextResponse.redirect(new URL("/admin/instagram-bot/setup?success=connected", req.nextUrl.origin));
+    }
+
+    if (!creds.metaAppId?.trim()) {
+      return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=meta_not_configured", req.nextUrl.origin));
+    }
+
     const tokenRes = await fetch(
       `https://graph.facebook.com/${graphVersion}/oauth/access_token?` +
       new URLSearchParams({
@@ -41,13 +131,12 @@ export async function GET(req: NextRequest) {
     );
 
     if (!tokenRes.ok) {
-      console.error("[instagram-oauth] Token exchange failed:", await tokenRes.text());
+      console.error("[instagram-oauth] Facebook token exchange failed:", await tokenRes.text());
       return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=token_exchange_failed", req.nextUrl.origin));
     }
 
     const tokenData = (await tokenRes.json()) as { access_token: string; token_type: string; expires_in?: number };
 
-    // Exchange for long-lived token
     const longRes = await fetch(
       `https://graph.facebook.com/${graphVersion}/oauth/access_token?` +
       new URLSearchParams({
@@ -67,7 +156,6 @@ export async function GET(req: NextRequest) {
       ? new Date(Date.now() + longData.expires_in * 1000).toISOString()
       : null;
 
-    // Get user's Pages
     const pagesRes = await fetch(
       `https://graph.facebook.com/${graphVersion}/me/accounts?access_token=${longToken}&fields=id,name,access_token,instagram_business_account`,
     );
@@ -81,7 +169,6 @@ export async function GET(req: NextRequest) {
     const pageToken = page.access_token;
     const igBizId = page.instagram_business_account.id;
 
-    // Fetch IG username
     let igUsername = "";
     try {
       const igRes = await fetch(
@@ -91,7 +178,6 @@ export async function GET(req: NextRequest) {
       igUsername = igData.username || "";
     } catch { /* optional */ }
 
-    // Encrypt and store
     const encryptedToken = encrypt(pageToken, TOKEN_KEY_ENV);
     const sb = createServiceRoleClient();
 
@@ -108,7 +194,6 @@ export async function GET(req: NextRequest) {
       { onConflict: "tenant_id" },
     );
 
-    // Ensure automation config row exists
     await sb.from("instagram_automation_config" as any).upsert(
       { tenant_id: tenantId } as any,
       { onConflict: "tenant_id" },

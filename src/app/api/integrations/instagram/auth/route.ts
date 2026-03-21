@@ -5,7 +5,7 @@ import { checkInstagramEntitlement } from "@/lib/instagram-entitlement";
 import { getMetaPlatformCredentials } from "@/lib/meta-credentials";
 import { randomBytes } from "crypto";
 
-/** Start Meta OAuth for the tenant admin. Redirects to Facebook OAuth dialog. */
+/** Start Meta OAuth for the tenant admin. Prefers Instagram (instagram.com) when Instagram App ID is set in SaaS Admin. */
 export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization");
   const tokenParam = req.nextUrl.searchParams.get("token");
@@ -20,7 +20,6 @@ export async function GET(req: NextRequest) {
     { global: { headers: { Authorization: `Bearer ${bearer}` } } },
   );
 
-  // Pass JWT explicitly — getUser() with no args does not use the header for validation in API routes.
   const { data: userData } = await sb.auth.getUser(bearer);
   if (!userData.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -31,20 +30,50 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "No tenant context" }, { status: 400 });
   }
 
-  // Entitlement gate
   const ent = await checkInstagramEntitlement(sb, tenantId);
   if (!ent.entitled) {
     return NextResponse.json({ error: ent.reason || "Not entitled" }, { status: 403 });
   }
 
   const creds = await getMetaPlatformCredentials();
-  if (!creds.metaAppId) {
-    return NextResponse.json({ error: "Meta App ID not configured" }, { status: 503 });
+  if (!creds.metaAppSecret) {
+    return NextResponse.json({ error: "Meta App Secret not configured" }, { status: 503 });
   }
 
   const redirectUri = creds.oauthRedirectUri || `${req.nextUrl.origin}/api/integrations/instagram/callback`;
-  const state = `${tenantId}:${randomBytes(16).toString("hex")}`;
+  const nonce = randomBytes(16).toString("hex");
 
+  const instagramAppId = creds.instagramAppId?.trim();
+  if (instagramAppId) {
+    const state = `${tenantId}|${nonce}|ig`;
+    const scopes = [
+      "instagram_business_basic",
+      "instagram_business_manage_messages",
+      "instagram_business_manage_comments",
+      "instagram_business_content_publish",
+      "instagram_business_manage_insights",
+    ].join(",");
+    const oauthUrl =
+      `https://www.instagram.com/oauth/authorize?` +
+      new URLSearchParams({
+        client_id: instagramAppId,
+        redirect_uri: redirectUri,
+        response_type: "code",
+        scope: scopes,
+        state,
+        force_reauth: "true",
+      }).toString();
+    return NextResponse.redirect(oauthUrl);
+  }
+
+  if (!creds.metaAppId?.trim()) {
+    return NextResponse.json(
+      { error: "Configure Instagram App ID or Facebook App ID in SaaS Admin → Meta / Instagram API" },
+      { status: 503 },
+    );
+  }
+
+  const state = `${tenantId}|${nonce}|fb`;
   const scopes = [
     "instagram_basic",
     "instagram_manage_messages",

@@ -1916,6 +1916,7 @@ export type Database = {
           app_secret_encrypted: string
           graph_api_version: string
           id: string
+          instagram_app_id: string
           meta_app_id: string
           oauth_redirect_uri: string
           updated_at: string
@@ -1925,6 +1926,7 @@ export type Database = {
           app_secret_encrypted?: string
           graph_api_version?: string
           id?: string
+          instagram_app_id?: string
           meta_app_id?: string
           oauth_redirect_uri?: string
           updated_at?: string
@@ -1934,6 +1936,7 @@ export type Database = {
           app_secret_encrypted?: string
           graph_api_version?: string
           id?: string
+          instagram_app_id?: string
           meta_app_id?: string
           oauth_redirect_uri?: string
           updated_at?: string

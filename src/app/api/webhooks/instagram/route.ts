@@ -336,7 +336,7 @@ async function handleMessaging(sb: any, event: any, creds: any, start: number) {
     return;
   }
 
-  const sendUrl = `https://graph.facebook.com/${graphVersion}/${conn.facebook_page_id}/messages`;
+  const sendUrl = `https://graph.facebook.com/${graphVersion}/me/messages`;
   const activityBase = {
     tenant_id: conn.tenant_id,
     channel: "dm",

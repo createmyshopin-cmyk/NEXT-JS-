@@ -2,7 +2,10 @@ import { createServiceRoleClient } from "@/integrations/supabase/service-role";
 import { decrypt } from "@/lib/encryption";
 
 export interface MetaPlatformCredentials {
+  /** Facebook App ID (Settings → Basic) — used for Facebook Login OAuth. */
   metaAppId: string;
+  /** Instagram app ID (Instagram product in App Dashboard) — used for instagram.com OAuth when set. */
+  instagramAppId: string;
   metaAppSecret: string;
   webhookVerifyToken: string;
   graphApiVersion: string;
@@ -20,10 +23,10 @@ export async function getMetaPlatformCredentials(): Promise<MetaPlatformCredenti
     const sb = createServiceRoleClient();
     const { data } = await sb
       .from("saas_meta_platform_config" as any)
-      .select("meta_app_id, app_secret_encrypted, webhook_verify_token, graph_api_version, oauth_redirect_uri")
+      .select("meta_app_id, instagram_app_id, app_secret_encrypted, webhook_verify_token, graph_api_version, oauth_redirect_uri")
       .single();
 
-    if (data && (data as any).meta_app_id) {
+    if (data) {
       const row = data as any;
       let secret = "";
       if (row.app_secret_encrypted) {
@@ -33,9 +36,12 @@ export async function getMetaPlatformCredentials(): Promise<MetaPlatformCredenti
           secret = "";
         }
       }
-      if (row.meta_app_id && secret) {
+      const hasFb = !!(row.meta_app_id && String(row.meta_app_id).trim());
+      const hasIg = !!(row.instagram_app_id && String(row.instagram_app_id).trim());
+      if (secret && (hasFb || hasIg)) {
         return {
-          metaAppId: row.meta_app_id,
+          metaAppId: row.meta_app_id || "",
+          instagramAppId: row.instagram_app_id || "",
           metaAppSecret: secret,
           webhookVerifyToken: row.webhook_verify_token || process.env.META_WEBHOOK_VERIFY_TOKEN || "",
           graphApiVersion: row.graph_api_version || "v25.0",
@@ -49,6 +55,7 @@ export async function getMetaPlatformCredentials(): Promise<MetaPlatformCredenti
 
   return {
     metaAppId: process.env.META_APP_ID || "",
+    instagramAppId: process.env.INSTAGRAM_APP_ID || "",
     metaAppSecret: process.env.META_APP_SECRET || "",
     webhookVerifyToken: process.env.META_WEBHOOK_VERIFY_TOKEN || "",
     graphApiVersion: "v25.0",

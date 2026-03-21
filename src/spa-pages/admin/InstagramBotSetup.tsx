@@ -141,12 +141,13 @@ export default function InstagramBotSetup() {
           ) : (
             <>
               <p className="text-sm text-muted-foreground">
-                Connect your Instagram Business account to start receiving DMs and automating replies.
-                You need a Facebook Page linked to an Instagram Business or Creator account.
+                Connect your Instagram Business account for DMs and automations. If your platform has an{" "}
+                <strong className="text-foreground">Instagram App ID</strong> in SaaS Admin → Meta, you&apos;ll sign in on
+                Instagram; otherwise Meta uses Facebook Login with a Page linked to your Instagram professional account.
               </p>
               <Button onClick={connect}>
                 <Instagram className="h-4 w-4 mr-2" />
-                Connect with Facebook
+                Connect Instagram
               </Button>
             </>
           )}

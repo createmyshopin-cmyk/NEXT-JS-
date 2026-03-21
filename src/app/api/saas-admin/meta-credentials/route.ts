@@ -29,10 +29,19 @@ export async function GET(req: Request) {
   const sb = createServiceRoleClient();
   const { data } = await sb
     .from("saas_meta_platform_config" as any)
-    .select("meta_app_id, app_secret_encrypted, webhook_verify_token, graph_api_version, oauth_redirect_uri")
+    .select("meta_app_id, instagram_app_id, app_secret_encrypted, webhook_verify_token, graph_api_version, oauth_redirect_uri")
     .single();
 
-  if (!data) return NextResponse.json({ meta_app_id: "", webhook_verify_token: "", graph_api_version: "v25.0", oauth_redirect_uri: "", has_secret: false });
+  if (!data) {
+    return NextResponse.json({
+      meta_app_id: "",
+      instagram_app_id: "",
+      webhook_verify_token: "",
+      graph_api_version: "v25.0",
+      oauth_redirect_uri: "",
+      has_secret: false,
+    });
+  }
 
   const row = data as any;
   let hasSecret = false;
@@ -45,6 +54,7 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     meta_app_id: row.meta_app_id || "",
+    instagram_app_id: row.instagram_app_id || "",
     webhook_verify_token: row.webhook_verify_token || "",
     graph_api_version: row.graph_api_version || "v25.0",
     oauth_redirect_uri: row.oauth_redirect_uri || "",
@@ -57,7 +67,14 @@ export async function POST(req: Request) {
   const uid = await authenticateSuperAdmin(req);
   if (!uid) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  let body: { meta_app_id?: string; app_secret?: string; webhook_verify_token?: string; graph_api_version?: string; oauth_redirect_uri?: string };
+  let body: {
+    meta_app_id?: string;
+    instagram_app_id?: string;
+    app_secret?: string;
+    webhook_verify_token?: string;
+    graph_api_version?: string;
+    oauth_redirect_uri?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -68,6 +85,7 @@ export async function POST(req: Request) {
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
   if (body.meta_app_id !== undefined) update.meta_app_id = body.meta_app_id;
+  if (body.instagram_app_id !== undefined) update.instagram_app_id = body.instagram_app_id;
   if (body.webhook_verify_token !== undefined) update.webhook_verify_token = body.webhook_verify_token;
   if (body.graph_api_version !== undefined) update.graph_api_version = body.graph_api_version;
   if (body.oauth_redirect_uri !== undefined) update.oauth_redirect_uri = body.oauth_redirect_uri;

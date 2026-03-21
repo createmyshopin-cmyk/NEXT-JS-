@@ -102,7 +102,15 @@ const SaasAdminSettings = () => {
   const [plans, setPlans] = useState<any[]>([]);
   const [entriSaving, setEntriSaving] = useState(false);
   const [metaSaving, setMetaSaving] = useState(false);
-  const [meta, setMeta] = useState({ metaAppId: "", metaAppSecret: "", webhookVerifyToken: "", graphApiVersion: "v25.0", oauthRedirectUri: "", hasSecret: false });
+  const [meta, setMeta] = useState({
+    metaAppId: "",
+    instagramAppId: "",
+    metaAppSecret: "",
+    webhookVerifyToken: "",
+    graphApiVersion: "v25.0",
+    oauthRedirectUri: "",
+    hasSecret: false,
+  });
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -165,7 +173,15 @@ const SaasAdminSettings = () => {
         const mRes = await fetch("/api/saas-admin/meta-credentials", { headers: { Authorization: `Bearer ${session.access_token}` } });
         if (mRes.ok) {
           const mc = await mRes.json();
-          setMeta((m) => ({ ...m, metaAppId: mc.meta_app_id || "", webhookVerifyToken: mc.webhook_verify_token || "", graphApiVersion: mc.graph_api_version || "v25.0", oauthRedirectUri: mc.oauth_redirect_uri || "", hasSecret: !!mc.has_secret }));
+          setMeta((m) => ({
+            ...m,
+            metaAppId: mc.meta_app_id || "",
+            instagramAppId: mc.instagram_app_id || "",
+            webhookVerifyToken: mc.webhook_verify_token || "",
+            graphApiVersion: mc.graph_api_version || "v25.0",
+            oauthRedirectUri: mc.oauth_redirect_uri || "",
+            hasSecret: !!mc.has_secret,
+          }));
         }
       }
     } catch { /* ignore */ }
@@ -237,6 +253,7 @@ const SaasAdminSettings = () => {
       if (!session?.access_token) throw new Error("Not authenticated");
       const payload: Record<string, string> = {
         meta_app_id: meta.metaAppId,
+        instagram_app_id: meta.instagramAppId,
         webhook_verify_token: meta.webhookVerifyToken,
         graph_api_version: meta.graphApiVersion,
         oauth_redirect_uri: meta.oauthRedirectUri,
@@ -441,22 +458,34 @@ const SaasAdminSettings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Instagram className="h-5 w-5 text-pink-500" /> Meta / Instagram API</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Platform-level Facebook app credentials for Instagram DM automation. Only super admins can view or edit.
+            App Secret is shared. Set <strong>Instagram App ID</strong> to use Instagram Business Login (oauth on instagram.com); otherwise set <strong>Facebook App ID</strong> for Facebook Login. Only super admins can edit.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Meta App ID</Label>
+              <Label>Facebook App ID</Label>
               <p className="text-xs text-muted-foreground mt-0.5 mb-1">
-                Use the <strong>Facebook App ID</strong> (App Dashboard → Settings → Basic, or the ID in the app header). Do not use the separate &quot;Instagram app ID&quot; from the Instagram product card — OAuth will fail.
+                App Dashboard → Settings → Basic (or header). Used when <strong>Instagram App ID</strong> below is empty — Facebook Login → Page token.
               </p>
-              <Input value={meta.metaAppId} onChange={(e) => setMeta((m) => ({ ...m, metaAppId: e.target.value }))} className="mt-1 font-mono text-xs" placeholder="Facebook App ID (not Instagram app ID)" />
+              <Input value={meta.metaAppId} onChange={(e) => setMeta((m) => ({ ...m, metaAppId: e.target.value }))} className="mt-1 font-mono text-xs" placeholder="e.g. 1494635005587494" />
             </div>
             <div>
               <Label>App Secret {meta.hasSecret && <span className="text-xs text-green-600 ml-1">(saved)</span>}</Label>
               <Input type="password" value={meta.metaAppSecret} onChange={(e) => setMeta((m) => ({ ...m, metaAppSecret: e.target.value }))} className="mt-1 font-mono text-xs" placeholder={meta.hasSecret ? "Leave blank to keep current" : "Enter Meta App Secret"} />
             </div>
+          </div>
+          <div>
+            <Label>Instagram App ID (recommended for Meta &quot;Instagram&quot; product)</Label>
+            <p className="text-xs text-muted-foreground mt-0.5 mb-1">
+              Meta → Instagram → API setup: <strong>Instagram app ID</strong> (not the Facebook App ID). When set, tenant <strong>Connect Instagram</strong> opens <code className="text-[11px] bg-muted px-1 rounded">instagram.com/oauth/authorize</code> per Meta Developer. Requires the same App Secret and valid OAuth redirect URIs for Instagram.
+            </p>
+            <Input
+              value={meta.instagramAppId}
+              onChange={(e) => setMeta((m) => ({ ...m, instagramAppId: e.target.value }))}
+              className="mt-1 font-mono text-xs"
+              placeholder="e.g. 1484662382996042"
+            />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -473,8 +502,12 @@ const SaasAdminSettings = () => {
             <Input value={meta.oauthRedirectUri} onChange={(e) => setMeta((m) => ({ ...m, oauthRedirectUri: e.target.value }))} className="mt-1 font-mono text-xs" placeholder="https://yourdomain.com/api/integrations/instagram/callback" />
           </div>
           <div className="flex items-center justify-between">
-            <span className={`text-xs font-medium px-2 py-1 rounded ${meta.metaAppId && meta.hasSecret ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
-              {meta.metaAppId && meta.hasSecret ? "Configured" : "Not Configured"}
+            <span
+              className={`text-xs font-medium px-2 py-1 rounded ${
+                (meta.metaAppId || meta.instagramAppId) && meta.hasSecret ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {(meta.metaAppId || meta.instagramAppId) && meta.hasSecret ? "Configured" : "Not Configured"}
             </span>
             <Button size="sm" onClick={saveMetaCredentials} disabled={metaSaving}>
               <Save className="w-3 h-3 mr-1" />{metaSaving ? "Saving..." : "Save Meta Credentials"}
