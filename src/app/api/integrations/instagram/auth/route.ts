@@ -20,7 +20,8 @@ export async function GET(req: NextRequest) {
     { global: { headers: { Authorization: `Bearer ${bearer}` } } },
   );
 
-  const { data: userData } = await sb.auth.getUser();
+  // Pass JWT explicitly — getUser() with no args does not use the header for validation in API routes.
+  const { data: userData } = await sb.auth.getUser(bearer);
   if (!userData.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

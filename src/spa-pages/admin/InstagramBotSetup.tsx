@@ -73,7 +73,7 @@ export default function InstagramBotSetup() {
       toast({ title: "Please log in first", variant: "destructive" });
       return;
     }
-    window.location.href = `/api/integrations/instagram/auth?token=${session.access_token}`;
+    window.location.href = `/api/integrations/instagram/auth?token=${encodeURIComponent(session.access_token)}`;
   };
 
   const disconnect = async () => {
