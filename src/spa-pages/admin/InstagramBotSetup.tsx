@@ -39,8 +39,21 @@ export default function InstagramBotSetup() {
   useEffect(() => {
     const s = searchParams.get("success");
     const e = searchParams.get("error");
+    const r = searchParams.get("reason");
     if (s === "connected") toast({ title: "Instagram connected successfully" });
-    if (e) toast({ title: "Connection failed", description: e.replace(/_/g, " "), variant: "destructive" });
+    if (e) {
+      const reasonHint =
+        r === "redirect_uri_mismatch"
+          ? " OAuth redirect URI must match Meta exactly: set SaaS Admin → Meta → OAuth Redirect URI to https://www.YOURDOMAIN.com/api/integrations/instagram/callback and add the same URL under Meta → Valid OAuth Redirect URIs."
+          : r === "invalid_or_expired_code"
+            ? " Try Connect Instagram again (code may have expired)."
+            : "";
+      toast({
+        title: "Connection failed",
+        description: `${e.replace(/_/g, " ")}${reasonHint}`,
+        variant: "destructive",
+      });
+    }
   }, [searchParams]);
 
   useEffect(() => {

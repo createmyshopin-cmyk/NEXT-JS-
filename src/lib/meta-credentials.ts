@@ -19,8 +19,9 @@ const META_KEY_ENV = "META_CREDENTIALS_ENCRYPTION_KEY";
  * Runs server-side only (service role).
  */
 export async function getMetaPlatformCredentials(): Promise<MetaPlatformCredentials> {
-  /** Still used when DB row exists but app secret / IDs are not yet valid (webhook verify must work). */
+  /** Used when DB row exists but full creds branch does not return (webhook + OAuth redirect must still resolve). */
   let webhookFromDb = "";
+  let oauthFromDb = "";
 
   try {
     const sb = createServiceRoleClient();
@@ -32,6 +33,7 @@ export async function getMetaPlatformCredentials(): Promise<MetaPlatformCredenti
     if (data) {
       const row = data as any;
       webhookFromDb = String(row.webhook_verify_token ?? "").trim();
+      oauthFromDb = String(row.oauth_redirect_uri ?? "").trim();
 
       let secret = "";
       if (row.app_secret_encrypted) {
@@ -64,6 +66,6 @@ export async function getMetaPlatformCredentials(): Promise<MetaPlatformCredenti
     metaAppSecret: process.env.META_APP_SECRET || "",
     webhookVerifyToken: webhookFromDb || process.env.META_WEBHOOK_VERIFY_TOKEN || "",
     graphApiVersion: "v25.0",
-    oauthRedirectUri: process.env.INSTAGRAM_OAUTH_REDIRECT_URI || "",
+    oauthRedirectUri: oauthFromDb || process.env.INSTAGRAM_OAUTH_REDIRECT_URI || "",
   };
 }

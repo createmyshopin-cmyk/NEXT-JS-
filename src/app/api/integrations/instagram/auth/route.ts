@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { checkInstagramEntitlement } from "@/lib/instagram-entitlement";
 import { getMetaPlatformCredentials } from "@/lib/meta-credentials";
+import { resolveInstagramOAuthRedirectUri } from "@/lib/instagram-oauth-redirect";
 import { randomBytes } from "crypto";
 
 type AuthResult =
@@ -53,7 +54,7 @@ async function instagramAuth(req: NextRequest): Promise<AuthResult> {
     };
   }
 
-  const redirectUri = creds.oauthRedirectUri || `${req.nextUrl.origin}/api/integrations/instagram/callback`;
+  const redirectUri = resolveInstagramOAuthRedirectUri(req, creds);
   const nonce = randomBytes(16).toString("hex");
 
   const instagramAppId = creds.instagramAppId?.trim();

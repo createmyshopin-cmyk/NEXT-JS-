@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/integrations/supabase/service-role";
 import { getMetaPlatformCredentials } from "@/lib/meta-credentials";
 import { parseInstagramOAuthState } from "@/lib/instagram-oauth-state";
+import { resolveInstagramOAuthRedirectUri } from "@/lib/instagram-oauth-redirect";
 import { encrypt } from "@/lib/encryption";
 
 const TOKEN_KEY_ENV = "INSTAGRAM_TOKEN_ENCRYPTION_KEY";
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=meta_not_configured", req.nextUrl.origin));
   }
 
-  const redirectUri = creds.oauthRedirectUri || `${req.nextUrl.origin}/api/integrations/instagram/callback`;
+  const redirectUri = resolveInstagramOAuthRedirectUri(req, creds);
   const graphVersion = creds.graphApiVersion || "v25.0";
 
   try {
@@ -51,8 +52,24 @@ export async function GET(req: NextRequest) {
       });
 
       if (!tokenRes.ok) {
-        console.error("[instagram-oauth] Instagram token exchange failed:", await tokenRes.text());
-        return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=token_exchange_failed", req.nextUrl.origin));
+        const errText = await tokenRes.text();
+        console.error("[instagram-oauth] Instagram token exchange failed:", tokenRes.status, errText, "redirect_uri used:", redirectUri);
+        let reason = "";
+        try {
+          const j = JSON.parse(errText) as { error_message?: string; error_type?: string };
+          const msg = (j.error_message || j.error_type || "").toLowerCase();
+          if (msg.includes("redirect") || msg.includes("redirect_uri")) {
+            reason = "redirect_uri_mismatch";
+          } else if (msg.includes("code") || msg.includes("invalid")) {
+            reason = "invalid_or_expired_code";
+          }
+        } catch {
+          /* plain text */
+        }
+        const u = new URL("/admin/instagram-bot/setup", req.nextUrl.origin);
+        u.searchParams.set("error", "token_exchange_failed");
+        if (reason) u.searchParams.set("reason", reason);
+        return NextResponse.redirect(u);
       }
 
       const tokenJson = (await tokenRes.json()) as { access_token: string; user_id?: string };
@@ -131,8 +148,20 @@ export async function GET(req: NextRequest) {
     );
 
     if (!tokenRes.ok) {
-      console.error("[instagram-oauth] Facebook token exchange failed:", await tokenRes.text());
-      return NextResponse.redirect(new URL("/admin/instagram-bot/setup?error=token_exchange_failed", req.nextUrl.origin));
+      const errText = await tokenRes.text();
+      console.error("[instagram-oauth] Facebook token exchange failed:", tokenRes.status, errText, "redirect_uri used:", redirectUri);
+      let reason = "";
+      try {
+        const j = JSON.parse(errText) as { error?: { message?: string } };
+        const msg = (j.error?.message || "").toLowerCase();
+        if (msg.includes("redirect") || msg.includes("redirect_uri")) reason = "redirect_uri_mismatch";
+      } catch {
+        /* */
+      }
+      const u = new URL("/admin/instagram-bot/setup", req.nextUrl.origin);
+      u.searchParams.set("error", "token_exchange_failed");
+      if (reason) u.searchParams.set("reason", reason);
+      return NextResponse.redirect(u);
     }
 
     const tokenData = (await tokenRes.json()) as { access_token: string; token_type: string; expires_in?: number };
