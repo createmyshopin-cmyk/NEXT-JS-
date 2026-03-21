@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/context/TenantContext";
+import { resolveEffectiveTenantId } from "@/lib/resolveEffectiveTenant";
 import type {
   Trip,
   TripItineraryDay,
@@ -52,13 +53,15 @@ export function useTrips() {
 
   const fetchTrips = useCallback(async () => {
     setLoading(true);
+    const effectiveTenantId = await resolveEffectiveTenantId(tenantId);
+
     let query = (supabase.from("trips") as any)
       .select("*")
       .eq("status", "active")
       .order("created_at", { ascending: false });
 
-    if (tenantId) {
-      query = query.eq("tenant_id", tenantId);
+    if (effectiveTenantId) {
+      query = query.eq("tenant_id", effectiveTenantId);
     } else {
       query = query.is("tenant_id", null);
     }
@@ -92,6 +95,8 @@ export function useTripDetail(slug: string | undefined) {
     const fetchAll = async () => {
       setLoading(true);
 
+      const effectiveTenantId = await resolveEffectiveTenantId(tenantId);
+
       const { data: tripData } = await (supabase.from("trips") as any)
         .select("*")
         .eq("slug", slug)
@@ -103,12 +108,13 @@ export function useTripDetail(slug: string | undefined) {
         return;
       }
 
-      if (tenantId && tripData.tenant_id !== tenantId) {
-        setTrip(null);
-        setLoading(false);
-        return;
-      }
-      if (!tenantId && tripData.tenant_id != null) {
+      if (effectiveTenantId) {
+        if (tripData.tenant_id !== effectiveTenantId) {
+          setTrip(null);
+          setLoading(false);
+          return;
+        }
+      } else if (tripData.tenant_id != null) {
         setTrip(null);
         setLoading(false);
         return;
