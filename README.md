@@ -18,7 +18,7 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:8080](http://localhost:8080) with your browser to see the result (this project uses port **8080**).
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
@@ -33,8 +33,16 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Git repository
+
+Source: **[github.com/createmyshopin-cmyk/NEXT-JS-](https://github.com/createmyshopin-cmyk/NEXT-JS-)**
+
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **New project from this repo:** [Deploy on Vercel (clone from GitHub)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcreatemyshopin-cmyk%2FNEXT-JS-) — sign in with GitHub if prompted.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Already have a Vercel project?** In the [Vercel dashboard](https://vercel.com/dashboard) open your project → **Settings** → **Git** → **Connected Git Repository** → **Disconnect**, then **Connect Git Repository** and choose **`createmyshopin-cmyk/NEXT-JS-`**.
+
+3. Copy `.env.local.example` to environment variables in **Settings** → **Environment Variables** (never commit secrets).
+
+See also [Next.js deployment on Vercel](https://nextjs.org/docs/app/building-your-application/deploying).
