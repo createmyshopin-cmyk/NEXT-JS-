@@ -14,8 +14,26 @@ export default function InstagramBotSetup() {
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState("");
 
-  const webhookUrl = typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/instagram` : "";
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/integrations/instagram/webhook-url");
+        if (!res.ok) throw new Error("bad");
+        const data = (await res.json()) as { webhookUrl?: string };
+        if (!cancelled && data.webhookUrl) setWebhookUrl(data.webhookUrl);
+      } catch {
+        if (!cancelled && typeof window !== "undefined") {
+          setWebhookUrl(`${window.location.origin}/api/webhooks/instagram`);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const s = searchParams.get("success");
@@ -141,7 +159,10 @@ export default function InstagramBotSetup() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Use this URL in your Meta Developer Console webhook configuration. All tenants share the same webhook endpoint.
+            Use this URL in your Meta Developer Console webhook configuration. It uses the same public site origin as{" "}
+            <strong className="text-foreground font-medium">SaaS Admin → Meta OAuth redirect</strong> (or{" "}
+            <code className="text-xs bg-muted px-1 rounded">NEXT_PUBLIC_APP_URL</code>
+            ) — not this page&apos;s URL, so it never includes <code className="text-xs bg-muted px-1 rounded">/admin</code>. All tenants share one endpoint.
           </p>
           <div className="flex gap-2">
             <Input value={webhookUrl} readOnly className="font-mono text-xs" />
