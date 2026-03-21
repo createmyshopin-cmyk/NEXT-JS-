@@ -17,11 +17,10 @@ export async function GET(req: NextRequest) {
   const sb = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    { global: { headers: { Authorization: `Bearer ${bearer}` } } },
   );
 
-  const { data: userData } = await sb.auth.getUser(bearer);
-  if (!userData.user?.id) {
+  const { data: userData, error: authError } = await sb.auth.getUser(bearer);
+  if (authError || !userData.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -97,16 +97,21 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    resolveTenant().then(({ tenant, isSubdomain }) => {
-      if (tenant) {
-        setTenantId(tenant.id);
-        setTenantName(tenant.name);
-      } else if (isSubdomain) {
-        // On a real subdomain with no registered tenant
-        setNotFound(true);
-      }
-      setLoading(false);
-    });
+    resolveTenant()
+      .then(({ tenant, isSubdomain }) => {
+        if (tenant) {
+          setTenantId(tenant.id);
+          setTenantName(tenant.name);
+        } else if (isSubdomain) {
+          // On a real subdomain with no registered tenant
+          setNotFound(true);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("[TenantProvider] resolveTenant failed", err);
+        setLoading(false);
+      });
   }, []);
 
   return (

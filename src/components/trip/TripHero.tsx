@@ -1,17 +1,30 @@
-import { Clock, MapPin, CalendarDays, Download, Ticket, ExternalLink } from "lucide-react";
+import { Clock, MapPin, CalendarDays, ExternalLink } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import type { Trip, TripDate } from "@/types/trip";
 import { useCurrency } from "@/context/CurrencyContext";
 import { tripHasAnyLocation } from "@/lib/tripLocations";
+import { TripHeroActionButtons } from "@/components/trip/TripHeroActionButtons";
+import { cn } from "@/lib/utils";
 
 interface TripHeroProps {
   trip: Trip;
   dates: TripDate[];
   onGetItinerary: () => void;
   onBookNow: () => void;
+  /**
+   * When false (default), action buttons are hidden below `lg` — trip page uses a bottom sticky bar instead.
+   * Set true for embedded previews (e.g. admin dialog) where there is no sticky bar.
+   */
+  alwaysShowActionButtons?: boolean;
 }
 
-export default function TripHero({ trip, dates, onGetItinerary, onBookNow }: TripHeroProps) {
+export default function TripHero({
+  trip,
+  dates,
+  onGetItinerary,
+  onBookNow,
+  alwaysShowActionButtons = false,
+}: TripHeroProps) {
   const { format: fmt } = useCurrency();
 
   const dateChips = dates
@@ -131,21 +144,17 @@ export default function TripHero({ trip, dates, onGetItinerary, onBookNow }: Tri
               )}
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={onGetItinerary}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-primary text-primary font-semibold text-sm hover:bg-primary/5 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                Get Itinerary
-              </button>
-              <button
-                onClick={onBookNow}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
-              >
-                <Ticket className="w-4 h-4" />
-                Book Now
-              </button>
+            <div
+              className={cn(
+                alwaysShowActionButtons ? "flex" : "hidden lg:flex",
+                "w-full justify-end lg:w-auto"
+              )}
+            >
+              <TripHeroActionButtons
+                variant="hero"
+                onGetItinerary={onGetItinerary}
+                onBookNow={onBookNow}
+              />
             </div>
           </div>
         </div>

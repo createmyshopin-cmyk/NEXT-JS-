@@ -5,6 +5,8 @@ import type { TripDate } from "@/types/trip";
 
 interface TripDatesGridProps {
   dates: TripDate[];
+  /** Opens booking with this date batch pre-selected (e.g. tap “Starting price”). */
+  onBookDate?: (date: TripDate) => void;
 }
 
 const statusConfig: Record<
@@ -28,7 +30,7 @@ const statusConfig: Record<
   },
 };
 
-export default function TripDatesGrid({ dates }: TripDatesGridProps) {
+export default function TripDatesGrid({ dates, onBookDate }: TripDatesGridProps) {
   const { format: fmt } = useCurrency();
 
   if (dates.length === 0) {
@@ -70,21 +72,41 @@ export default function TripDatesGrid({ dates }: TripDatesGridProps) {
                 {format(parseISO(d.endDate), "EEE MMM dd yyyy")}
               </p>
 
-              <div
-                className={cn(
-                  "mt-auto w-full rounded-lg border-2 border-violet-200 bg-violet-50/40 px-3 py-2.5 text-center dark:border-violet-500/35 dark:bg-violet-950/25",
-                  soldOut && "border-border bg-muted/30 dark:bg-muted/20"
-                )}
-              >
-                <span
+              {soldOut || !onBookDate ? (
+                <div
                   className={cn(
-                    "text-sm font-semibold text-violet-700 dark:text-violet-300",
-                    soldOut && "text-muted-foreground line-through"
+                    "mt-auto w-full rounded-lg border-2 border-violet-200 bg-violet-50/40 px-3 py-2.5 text-center dark:border-violet-500/35 dark:bg-violet-950/25",
+                    soldOut && "border-border bg-muted/30 dark:bg-muted/20"
                   )}
                 >
-                  Starting Price: {fmt(d.price)} /-
-                </span>
-              </div>
+                  <span
+                    className={cn(
+                      "text-sm font-semibold text-violet-700 dark:text-violet-300",
+                      soldOut && "text-muted-foreground line-through"
+                    )}
+                  >
+                    Starting Price: {fmt(d.price)} /-
+                  </span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onBookDate(d)}
+                  className={cn(
+                    "mt-auto w-full rounded-lg border-2 border-violet-200 bg-violet-50/40 px-3 py-2.5 text-center transition-colors",
+                    "hover:border-violet-400 hover:bg-violet-100/70 active:scale-[0.99]",
+                    "dark:border-violet-500/35 dark:bg-violet-950/25 dark:hover:border-violet-400/50 dark:hover:bg-violet-950/40",
+                    "touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2"
+                  )}
+                >
+                  <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">
+                    Starting Price: {fmt(d.price)} /-
+                  </span>
+                  <span className="mt-1 block text-[11px] font-medium text-violet-600/90 dark:text-violet-300/80">
+                    Tap to book
+                  </span>
+                </button>
+              )}
             </div>
           );
         })}

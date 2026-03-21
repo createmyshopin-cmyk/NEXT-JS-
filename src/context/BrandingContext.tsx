@@ -86,6 +86,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     async function loadBranding() {
+      try {
       // If on an unregistered subdomain, skip branding load entirely
       if (notFound) {
         setBranding({ ...defaultBranding, loading: false });
@@ -198,6 +199,10 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
           organizationSchema: [organizationSchema, websiteSchema],
         });
       }
+    } catch (err) {
+      console.error("[BrandingProvider] loadBranding failed", err);
+      setBranding({ ...defaultBranding, loading: false });
+    }
     }
 
     loadBranding();

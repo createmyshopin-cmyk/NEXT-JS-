@@ -12,6 +12,7 @@ import TripCancellationPolicy from "@/components/trip/TripCancellationPolicy";
 import TripCTA from "@/components/trip/TripCTA";
 import TripEnquiryModal from "@/components/trip/TripEnquiryModal";
 import TripBookingModal from "@/components/trip/TripBookingModal";
+import { TripHeroActionButtons } from "@/components/trip/TripHeroActionButtons";
 import StickyHeader from "@/components/StickyHeader";
 import Footer from "@/components/Footer";
 
@@ -24,6 +25,7 @@ const TripDetails = () => {
 
   const [enquiryOpen, setEnquiryOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingInitialDateId, setBookingInitialDateId] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -64,7 +66,7 @@ const TripDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
       <StickyHeader />
 
       {/* Back button */}
@@ -82,7 +84,10 @@ const TripDetails = () => {
         trip={trip}
         dates={dates}
         onGetItinerary={() => setEnquiryOpen(true)}
-        onBookNow={() => setBookingOpen(true)}
+        onBookNow={() => {
+          setBookingInitialDateId(null);
+          setBookingOpen(true);
+        }}
       />
 
       <TripGallery images={trip.images} name={trip.name} />
@@ -98,6 +103,10 @@ const TripDetails = () => {
               inclusions={inclusions}
               otherInfo={otherInfo}
               customTabs={trip.customTabs}
+              onBookFromDates={(d) => {
+                setBookingInitialDateId(d.id);
+                setBookingOpen(true);
+              }}
             />
           </div>
 
@@ -123,9 +132,13 @@ const TripDetails = () => {
 
       <TripBookingModal
         open={bookingOpen}
-        onOpenChange={setBookingOpen}
+        onOpenChange={(open) => {
+          setBookingOpen(open);
+          if (!open) setBookingInitialDateId(null);
+        }}
         trip={trip}
         dates={dates}
+        initialTripDateId={bookingInitialDateId}
       />
 
       <TripEnquiryModal
@@ -133,6 +146,28 @@ const TripDetails = () => {
         onOpenChange={setEnquiryOpen}
         tripName={trip.name}
       />
+
+      {/* Mobile & tablet: sticky CTA bar (hidden on lg+ where hero buttons show) */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur-md supports-[backdrop-filter]:bg-background/90 dark:shadow-[0_-8px_30px_rgba(0,0,0,0.35) lg:hidden"
+        role="navigation"
+        aria-label="Trip booking actions"
+      >
+        <div className="mx-auto max-w-7xl px-3 pt-3 sm:px-4 sm:pt-3">
+          <TripHeroActionButtons
+            variant="sticky"
+            onGetItinerary={() => setEnquiryOpen(true)}
+            onBookNow={() => {
+              setBookingInitialDateId(null);
+              setBookingOpen(true);
+            }}
+          />
+        </div>
+        <div
+          className="h-[max(0.5rem,env(safe-area-inset-bottom))] shrink-0 sm:h-[max(0.75rem,env(safe-area-inset-bottom))]"
+          aria-hidden
+        />
+      </div>
 
       <Footer />
     </div>

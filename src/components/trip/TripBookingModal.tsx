@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { format, parseISO } from "date-fns";
 import { Minus, Plus, CalendarDays, Users, MessageCircle, CheckCircle2, Copy, Check, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +21,8 @@ interface TripBookingModalProps {
   onOpenChange: (open: boolean) => void;
   trip: Trip;
   dates: TripDate[];
+  /** When opening from a specific date card, pre-select this batch (if still bookable). */
+  initialTripDateId?: string | null;
 }
 
 const Stepper = ({ value, onChange, min = 0, max = 20, label }: { value: number; onChange: (v: number) => void; min?: number; max?: number; label?: string }) => (
@@ -48,7 +50,13 @@ function clampInt(n: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, n));
 }
 
-export default function TripBookingModal({ open, onOpenChange, trip, dates }: TripBookingModalProps) {
+export default function TripBookingModal({
+  open,
+  onOpenChange,
+  trip,
+  dates,
+  initialTripDateId = null,
+}: TripBookingModalProps) {
   const { format: fmt } = useCurrency();
   const { tenantId: contextTenantId } = useTenant();
 
@@ -70,17 +78,51 @@ export default function TripBookingModal({ open, onOpenChange, trip, dates }: Tr
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
   const [copiedRef, setCopiedRef] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    setAdults(clampInt(trip.defaultAdults ?? 2, minAdults, maxAdults));
-    setChildren(0);
-  }, [open, trip.id, trip.defaultAdults, trip.minAdults, trip.maxAdults, minAdults, maxAdults]);
+  const wasOpenRef = useRef(false);
 
   const availableDates = useMemo(
     () => dates.filter((d) => d.status === "available" || d.status === "few_left"),
     [dates]
   );
+
+  useEffect(() => {
+    if (!open) {
+      wasOpenRef.current = false;
+      return;
+    }
+
+    const entering = !wasOpenRef.current;
+    wasOpenRef.current = true;
+
+    if (entering) {
+      setAdults(clampInt(trip.defaultAdults ?? 2, minAdults, maxAdults));
+      setChildren(0);
+      if (initialTripDateId && availableDates.some((d) => d.id === initialTripDateId)) {
+        setSelectedDateId(initialTripDateId);
+      } else {
+        setSelectedDateId(availableDates[0]?.id ?? "");
+      }
+      return;
+    }
+
+    setSelectedDateId((prev) => {
+      if (prev && availableDates.some((d) => d.id === prev)) return prev;
+      if (initialTripDateId && availableDates.some((d) => d.id === initialTripDateId)) {
+        return initialTripDateId;
+      }
+      return availableDates[0]?.id ?? "";
+    });
+  }, [
+    open,
+    trip.id,
+    trip.defaultAdults,
+    trip.minAdults,
+    trip.maxAdults,
+    minAdults,
+    maxAdults,
+    initialTripDateId,
+    availableDates,
+  ]);
 
   const selectedDate = useMemo(
     () => availableDates.find((d) => d.id === selectedDateId),

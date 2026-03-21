@@ -184,6 +184,7 @@ export function AdminPackagePreviewDialog({
               dates={dates}
               onGetItinerary={previewHint}
               onBookNow={previewHint}
+              alwaysShowActionButtons
             />
             <TripGallery images={trip.images} name={trip.name} />
             {trip.description ? (

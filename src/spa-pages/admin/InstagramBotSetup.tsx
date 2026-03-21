@@ -13,6 +13,7 @@ export default function InstagramBotSetup() {
   const [connection, setConnection] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState("");
 
@@ -68,12 +69,44 @@ export default function InstagramBotSetup() {
   };
 
   const connect = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
-      toast({ title: "Please log in first", variant: "destructive" });
-      return;
+    setConnecting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast({ title: "Please log in first", variant: "destructive" });
+        return;
+      }
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      const token = refreshed.session?.access_token ?? session.access_token;
+
+      const res = await fetch("/api/integrations/instagram/auth", {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+        redirect: "manual",
+      });
+
+      if (res.status === 302 || res.status === 307 || res.status === 308) {
+        const loc = res.headers.get("Location");
+        if (loc) {
+          window.location.href = loc;
+          return;
+        }
+      }
+
+      const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+      toast({
+        title: "Could not start Instagram login",
+        description:
+          typeof errBody.error === "string"
+            ? errBody.error
+            : res.status === 401
+              ? "Session expired or invalid — try signing out and back in."
+              : res.statusText,
+        variant: "destructive",
+      });
+    } finally {
+      setConnecting(false);
     }
-    window.location.href = `/api/integrations/instagram/auth?token=${encodeURIComponent(session.access_token)}`;
   };
 
   const disconnect = async () => {
@@ -145,9 +178,9 @@ export default function InstagramBotSetup() {
                 <strong className="text-foreground">Instagram App ID</strong> in SaaS Admin → Meta, you&apos;ll sign in on
                 Instagram; otherwise Meta uses Facebook Login with a Page linked to your Instagram professional account.
               </p>
-              <Button onClick={connect}>
+              <Button onClick={connect} disabled={connecting}>
                 <Instagram className="h-4 w-4 mr-2" />
-                Connect Instagram
+                {connecting ? "Starting…" : "Connect Instagram"}
               </Button>
             </>
           )}

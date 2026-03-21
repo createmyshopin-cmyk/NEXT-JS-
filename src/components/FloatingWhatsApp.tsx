@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { formatPhoneForWhatsApp } from "@/lib/countryCodes";
+import { cn } from "@/lib/utils";
 
 const FloatingWhatsApp = () => {
+  const pathname = usePathname();
+  /** Trip page has a fixed bottom CTA bar below `lg` — lift FAB above it. */
+  const tripPageStickyCta = Boolean(pathname && /^\/trip\/[^/]+/.test(pathname));
+
   const { settings, loading } = useSiteSettings();
   const [showTooltip, setShowTooltip] = useState(false);
   const [bounce, setBounce] = useState(false);
@@ -44,13 +50,16 @@ const FloatingWhatsApp = () => {
 
   if (loading || !waDigits || !waHref) return null;
 
-  /* z-40: stay below Dialog/Sheet/AlertDialog overlays (z-50) and similar popups so they fully cover the FAB */
+  /* z-[45]: above trip sticky CTA bar (z-40); still below Dialog/Sheet (z-50). */
   return (
     <div
-      className="fixed z-40 flex flex-col items-end gap-2 pointer-events-none [&>*]:pointer-events-auto
-        right-4 sm:right-6
-        bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))]
-        md:bottom-8 md:right-8"
+      className={cn(
+        "fixed z-[45] flex flex-col items-end gap-2 pointer-events-none [&>*]:pointer-events-auto",
+        "right-4 sm:right-6 lg:right-8",
+        tripPageStickyCta
+          ? "bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] lg:bottom-8"
+          : "bottom-6 sm:bottom-8"
+      )}
     >
       <AnimatePresence>
         {showTooltip && (

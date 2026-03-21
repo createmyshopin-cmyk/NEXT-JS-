@@ -1,9 +1,18 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useTenant } from "@/context/TenantContext";
 
 const PageLoader = () => (
-  <div style={{ minHeight: "100vh", background: "hsl(var(--background))" }} />
+  <div
+    className="min-h-screen flex flex-col items-center justify-center gap-3 bg-background text-muted-foreground"
+    role="status"
+    aria-live="polite"
+    aria-label="Loading"
+  >
+    <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+    <span className="text-sm">Loading…</span>
+  </div>
 );
 
 /**

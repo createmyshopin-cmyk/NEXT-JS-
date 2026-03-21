@@ -18,6 +18,8 @@ interface TripTabsProps {
   otherInfo: TripOtherInfoType[];
   /** Extra tabs from package editor (trips.custom_tabs). */
   customTabs?: TripCustomTab[];
+  /** When set, date cards can open booking with that batch pre-selected. */
+  onBookFromDates?: (date: TripDate) => void;
 }
 
 export default function TripTabs({
@@ -26,6 +28,7 @@ export default function TripTabs({
   inclusions,
   otherInfo,
   customTabs = [],
+  onBookFromDates,
 }: TripTabsProps) {
   return (
     <Tabs defaultValue="itinerary" className="w-full">
@@ -69,7 +72,7 @@ export default function TripTabs({
         <TripItinerary days={days} />
       </TabsContent>
       <TabsContent value="dates" className="pt-6">
-        <TripDatesGrid dates={dates} />
+        <TripDatesGrid dates={dates} onBookDate={onBookFromDates} />
       </TabsContent>
       <TabsContent value="inclusions" className="pt-6">
         <TripInclusions inclusions={inclusions} />
