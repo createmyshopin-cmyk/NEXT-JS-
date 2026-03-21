@@ -14,9 +14,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // JWT must be sent on every request: getUser() alone does not attach the session to RPC/PostgREST.
   const sb = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      global: { headers: { Authorization: `Bearer ${bearer}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
   );
 
   const { data: userData, error: authError } = await sb.auth.getUser(bearer);
