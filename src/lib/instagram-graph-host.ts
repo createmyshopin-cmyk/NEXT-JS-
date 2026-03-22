@@ -53,6 +53,34 @@ export async function sendInstagramMessagesWithHostFallback(
   });
 }
 
+/** POST Send API with one retry on the alternate host for responding to a comment. */
+export async function replyInstagramCommentWithHostFallback(
+  conn: { facebook_page_id: string; instagram_business_account_id: string },
+  graphVersion: string,
+  commentId: string,
+  messageText: string,
+  pageToken: string,
+): Promise<Response> {
+  const primaryHost = resolveInstagramGraphHost(conn);
+  const primaryUrl = `${primaryHost}/${graphVersion}/${commentId}/replies?message=${encodeURIComponent(messageText)}&access_token=${pageToken}`;
+  
+  let res = await fetch(primaryUrl, { method: "POST" });
+  if (res.ok) return res;
+  
+  const errText = await res.text();
+  if (!isLikelyWrongGraphHostTokenError(errText)) {
+    return new Response(errText, { status: res.status, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+  }
+  
+  const alternateHost =
+    primaryHost === "https://graph.instagram.com"
+      ? "https://graph.facebook.com"
+      : "https://graph.instagram.com";
+  
+  const altUrl = `${alternateHost}/${graphVersion}/${commentId}/replies?message=${encodeURIComponent(messageText)}&access_token=${pageToken}`;
+  return fetch(altUrl, { method: "POST" });
+}
+
 export function isLikelyWrongGraphHostTokenError(message: string | undefined): boolean {
   if (!message) return false;
   const m = message.toLowerCase();

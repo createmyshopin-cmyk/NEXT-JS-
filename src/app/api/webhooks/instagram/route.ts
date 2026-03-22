@@ -8,7 +8,7 @@ import { decrypt } from "@/lib/encryption";
 import { evaluateFlowDefinition, type FlowDefinition, type FlowVisit } from "@/lib/flow-engine";
 import { checkSenderFollowsBusinessAccount } from "@/lib/instagram-follower";
 import { followerFollowsToPlanValue } from "@/lib/instagram-follower-check";
-import { sendInstagramMessagesWithHostFallback } from "@/lib/instagram-graph-host";
+import { sendInstagramMessagesWithHostFallback, replyInstagramCommentWithHostFallback } from "@/lib/instagram-graph-host";
 import { buildRecipientConnectionOrClause, extractInboundDmBody } from "@/lib/instagram-webhook-inbound";
 import { parseMetaWebhookJson } from "@/lib/meta-webhook-json";
 
@@ -182,7 +182,10 @@ async function tryFlows(
 function matchDbKeywordRule(rule: any, text: string, channel: string): boolean {
   if (!rule.enabled) return false;
   if (rule.channel && rule.channel !== channel) return false;
-  const matches = Array.isArray(rule.match) ? rule.match : [rule.match];
+  const rawMatch = rule.match || "";
+  const matches = Array.isArray(rawMatch) 
+    ? rawMatch 
+    : rawMatch.split(",").map((m: string) => m.trim()).filter(Boolean);
   const normalizedText = text.toLowerCase().trim();
   return matches.some((m: string) => {
     const needle = (rule.case_sensitive ? m : m.toLowerCase()).trim();
@@ -369,7 +372,7 @@ async function handleMessaging(
   if (!flowHit.action) {
     const kr = await loadKeywordRulesAction(sb, conn.tenant_id, "dm", inboundText);
     if (kr) {
-      action = kr.action;
+      action = kr.action as import("@/lib/flow-engine").ResolvedFlowActionType;
       templateText = kr.template_text;
       url = kr.url;
     }
@@ -603,7 +606,7 @@ async function handleChange(sb: any, entry: any, change: any, creds: any, start:
   if (!flowHit.action) {
     const kr = await loadKeywordRulesAction(sb, conn.tenant_id, "comment", text);
     if (kr) {
-      action = kr.action;
+      action = kr.action as import("@/lib/flow-engine").ResolvedFlowActionType;
       templateText = kr.template_text;
     }
   }
@@ -611,6 +614,33 @@ async function handleChange(sb: any, entry: any, change: any, creds: any, start:
   if (action === "suppress") return;
 
   const latency = Date.now() - start;
+
+  if (action === "template_reply" || action === "send_link" || action === "ai_reply") {
+    let bodyText = templateText || "";
+    if (action === "ai_reply") {
+      const { data: aiSettings } = await sb
+        .from("ai_settings")
+        .select("system_prompt, ai_model")
+        .eq("tenant_id", conn.tenant_id)
+        .maybeSingle();
+      const systemPrompt = aiSettings?.system_prompt || "You are a helpful travel assistant.";
+      const model = aiSettings?.ai_model || process.env.INSTAGRAM_DM_MODEL || "gpt-4o-mini";
+      const aiResult = await generateDmReply(text, systemPrompt, { model });
+      bodyText = aiResult.reply;
+    }
+
+    if (bodyText) {
+      try {
+        const pageToken = decrypt(conn.page_access_token_encrypted, TOKEN_KEY_ENV);
+        const sendRes = await replyInstagramCommentWithHostFallback(conn, graphVersion, commentId, bodyText, pageToken);
+        if (!sendRes.ok) {
+          console.error("[instagram-webhook] Comment reply failed:", sendRes.status, await sendRes.text());
+        }
+      } catch (decErr) {
+        console.error("[instagram-webhook] Failed to decrypt page token for tenant", conn.tenant_id, decErr);
+      }
+    }
+  }
 
   await sb.from("instagram_channel_activity").insert({
     tenant_id: conn.tenant_id,

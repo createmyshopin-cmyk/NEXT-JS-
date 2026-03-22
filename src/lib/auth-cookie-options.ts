@@ -21,19 +21,19 @@ export function getAuthCookieDomainForHostname(hostname: string): string | undef
   if (isLocalOrPreviewHostname(h)) return undefined;
   if (h === "127.0.0.1") return undefined;
 
-  const explicit =
-    typeof process !== "undefined" ? process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN?.trim() : undefined;
-  if (explicit) {
-    return explicit.startsWith(".") ? explicit : `.${explicit}`;
-  }
-
   const raw =
     typeof process !== "undefined" ? process.env.NEXT_PUBLIC_PLATFORM_BASE_DOMAIN?.trim() ?? "" : "";
   const base = normalizeBaseDomain(raw) || DEFAULT_PLATFORM_BASE;
 
   if (h === base || h === `www.${base}` || h.endsWith(`.${base}`)) {
+    const explicit =
+      typeof process !== "undefined" ? process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN?.trim() : undefined;
+    if (explicit) {
+      return explicit.startsWith(".") ? explicit : `.${explicit}`;
+    }
     return `.${base}`;
   }
+
   return undefined;
 }
 
