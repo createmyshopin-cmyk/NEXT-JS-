@@ -17,10 +17,7 @@ function tenantAdminAbsoluteUrl(slug: string, apexDomain: string): string {
 }
 
 function navigateHard(url: string): void {
-  // Defer past React commit + toast updates so the browser reliably performs cross-subdomain navigation.
-  queueMicrotask(() => {
-    window.location.replace(url);
-  });
+  window.location.replace(url);
 }
 
 /** Apex for tenant subdomains (no leading dot, no www). */
@@ -29,6 +26,23 @@ export function platformBaseDomainFromEnv(): string {
   let s = raw.replace(/^\./, "");
   if (s.startsWith("www.")) s = s.slice(4);
   return s || "travelvoo.in";
+}
+
+/**
+ * When `false`, post-login/signup stays on the current origin (`/admin/dashboard`).
+ * Default: enabled (unset or `true`).
+ */
+export function redirectAdminToTenantSubdomainEnabled(): boolean {
+  const raw =
+    typeof process !== "undefined" ? process.env.NEXT_PUBLIC_REDIRECT_ADMIN_TO_TENANT_SUBDOMAIN?.trim().toLowerCase() ?? "" : "";
+  if (!raw) return true;
+  return raw !== "false" && raw !== "0" && raw !== "no";
+}
+
+async function ensureSessionThenNavigate(supabase: SupabaseClient): Promise<void> {
+  if (typeof window === "undefined") return;
+  await supabase.auth.getSession();
+  await new Promise<void>((r) => setTimeout(r, 0));
 }
 
 /**
@@ -44,6 +58,13 @@ export async function redirectTenantAdminDashboard(
   router: { replace: (href: string) => void },
   options?: RedirectTenantAdminOptions
 ): Promise<void> {
+  if (!redirectAdminToTenantSubdomainEnabled()) {
+    router.replace("/admin/dashboard");
+    return;
+  }
+
+  await ensureSessionThenNavigate(supabase);
+
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
   if (!isTenantLoginMarketingRedirectHost(hostname)) {
     router.replace("/admin/dashboard");

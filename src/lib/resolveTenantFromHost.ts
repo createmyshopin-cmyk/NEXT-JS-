@@ -12,6 +12,25 @@ function envPlatformBaseDomains(): string[] {
   return raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 }
 
+/** Apex hostnames for marketing vs tenant (no leading dot, no www). */
+function normalizeMarketingBaseDomain(s: string): string {
+  let x = s.trim().toLowerCase().replace(/^\./, "");
+  if (x.startsWith("www.")) x = x.slice(4);
+  return x;
+}
+
+/**
+ * Bases used to decide post-login redirect from marketing → tenant subdomain.
+ * Defaults to travelvoo.in when env is unset (matches platformBaseDomainFromEnv).
+ */
+function marketingBaseDomainsForRedirect(): string[] {
+  const raw = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_PLATFORM_BASE_DOMAIN : undefined;
+  if (raw?.trim()) {
+    return raw.split(",").map((s) => normalizeMarketingBaseDomain(s)).filter(Boolean);
+  }
+  return ["travelvoo.in"];
+}
+
 let cachedPlatformHosts: Set<string> | null = null;
 
 /** For tests only — resets cached platform apex set. */
@@ -51,18 +70,29 @@ export function isLocalOrPreviewHostname(hostname: string): boolean {
 
 /**
  * Sync helper for `/login` post-login redirect (no DB).
- * True on marketing hosts: localhost/preview, 2-label apex (e.g. travelvoo.in), or
- * NEXT_PUBLIC_PLATFORM_BASE_DOMAIN / www.<that> — same idea as tenant resolution.
+ * True on marketing hosts: localhost/preview, platform apex / www (from env or legacy 2-label + www heuristics).
+ * False on tenant subdomains (e.g. demo.travelvoo.in, demo.travelvoo.co.in when base is travelvoo.co.in).
  */
 export function isTenantLoginMarketingRedirectHost(hostname: string): boolean {
   if (isLocalOrPreviewHostname(hostname)) return true;
   const h = hostname.toLowerCase();
+
+  for (const base of marketingBaseDomainsForRedirect()) {
+    if (h === base || h === `www.${base}`) return true;
+    if (h.endsWith(`.${base}`)) {
+      const prefix = h.slice(0, -(base.length + 1));
+      // Single-label prefix that is not "www" → tenant subdomain (e.g. demo.travelvoo.co.in)
+      if (prefix && !prefix.includes(".") && prefix !== "www") return false;
+    }
+  }
+
   const parts = h.split(".");
   if (parts.length <= 2) return true;
-  // www.<apex> is the marketing host even when NEXT_PUBLIC_PLATFORM_BASE_DOMAIN was not baked into the client bundle.
+  // www.<apex> when apex is two labels (e.g. www.travelvoo.in) — env optional
   if (parts.length >= 3 && parts[0] === "www") return true;
   for (const base of envPlatformBaseDomains()) {
-    if (h === base || h === `www.${base}`) return true;
+    const b = normalizeMarketingBaseDomain(base);
+    if (h === b || h === `www.${b}`) return true;
   }
   return false;
 }

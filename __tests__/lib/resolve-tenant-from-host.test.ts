@@ -45,6 +45,13 @@ describe("isTenantLoginMarketingRedirectHost", () => {
     process.env.NEXT_PUBLIC_PLATFORM_BASE_DOMAIN = "travelvoo.in";
     expect(isTenantLoginMarketingRedirectHost("www.travelvoo.in")).toBe(true);
   });
+
+  it("treats multi-part apex (e.g. .co.in) as marketing when env matches", () => {
+    process.env.NEXT_PUBLIC_PLATFORM_BASE_DOMAIN = "travelvoo.co.in";
+    expect(isTenantLoginMarketingRedirectHost("travelvoo.co.in")).toBe(true);
+    expect(isTenantLoginMarketingRedirectHost("www.travelvoo.co.in")).toBe(true);
+    expect(isTenantLoginMarketingRedirectHost("demo.travelvoo.co.in")).toBe(false);
+  });
 });
 
 describe("resolveTenantFromHostnameDb", () => {

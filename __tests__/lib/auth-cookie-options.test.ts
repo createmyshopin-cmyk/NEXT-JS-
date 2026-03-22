@@ -29,7 +29,14 @@ describe("getAuthCookieDomainForHostname", () => {
     expect(getAuthCookieDomainForHostname("travelvoo.in")).toBe(".travelvoo.in");
   });
 
-  it("returns undefined when hostname is not under configured base", () => {
+  it("defaults to travelvoo.in when platform env is unset (shared cookie for signup → subdomain)", () => {
+    expect(getAuthCookieDomainForHostname("demo.travelvoo.in")).toBe(".travelvoo.in");
+    expect(getAuthCookieDomainForHostname("www.travelvoo.in")).toBe(".travelvoo.in");
+    expect(getAuthCookieDomainForHostname("travelvoo.in")).toBe(".travelvoo.in");
+  });
+
+  it("returns undefined when hostname is not under travelvoo.in tree", () => {
+    expect(getAuthCookieDomainForHostname("other.com")).toBeUndefined();
     process.env.NEXT_PUBLIC_PLATFORM_BASE_DOMAIN = "travelvoo.in";
     expect(getAuthCookieDomainForHostname("other.com")).toBeUndefined();
   });
