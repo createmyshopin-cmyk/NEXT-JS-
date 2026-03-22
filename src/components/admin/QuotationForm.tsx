@@ -79,7 +79,18 @@ export function QuotationForm({ open, onOpenChange, quotation, stays, onSaved }:
     if (quotation) {
       ({ error } = await supabase.from("quotations").update(payload).eq("id", quotation.id));
     } else {
+      const { data: tenantId, error: tidErr } = await supabase.rpc("get_my_tenant_id");
+      if (tidErr || !tenantId) {
+        toast({
+          title: "Error",
+          description: tidErr?.message ?? "Could not resolve your tenant. Try signing in again.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
       payload.quote_id = `Q-${Math.floor(1000 + Math.random() * 9000)}`;
+      payload.tenant_id = tenantId;
       ({ error } = await supabase.from("quotations").insert(payload));
     }
 

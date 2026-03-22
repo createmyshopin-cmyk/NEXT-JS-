@@ -480,25 +480,30 @@ const BookingFormModal = ({ open, onOpenChange, stayName, stayId, roomCategories
     }
 
     if (siteSettings?.auto_generate_invoice && insertedBooking?.id) {
-      const roomTotal = roomsJson.reduce((s, r) => s + (r.price || 0) * (r.count || 1), 0);
-      const addonsTotal = addonsJson.reduce((s, a) => s + (a.price || 0), 0);
-      await supabase.from("invoices").insert({
-        invoice_id: `INV-${Date.now().toString(36).toUpperCase()}`,
-        booking_id: insertedBooking.id,
-        guest_name: name,
-        phone: fullPhone,
-        email: email || "",
-        stay_id: stayId,
-        checkin: firstRange ? format(firstRange.checkIn, "yyyy-MM-dd") : null,
-        checkout: firstRange ? format(firstRange.checkOut, "yyyy-MM-dd") : null,
-        rooms: roomsJson,
-        addons: addonsJson,
-        room_total: roomTotal,
-        addons_total: addonsTotal,
-        total_price: grandTotal,
-        coupon_code: appliedCoupon?.code || null,
-        payment_status: "pending",
-      } as any);
+      const { data: stayRow } = await supabase.from("stays").select("tenant_id").eq("id", stayId).maybeSingle();
+      const invoiceTenantId = stayRow?.tenant_id;
+      if (invoiceTenantId) {
+        const roomTotal = roomsJson.reduce((s, r) => s + (r.price || 0) * (r.count || 1), 0);
+        const addonsTotal = addonsJson.reduce((s, a) => s + (a.price || 0), 0);
+        await supabase.from("invoices").insert({
+          invoice_id: `INV-${Date.now().toString(36).toUpperCase()}`,
+          booking_id: insertedBooking.id,
+          guest_name: name,
+          phone: fullPhone,
+          email: email || "",
+          stay_id: stayId,
+          tenant_id: invoiceTenantId,
+          checkin: firstRange ? format(firstRange.checkIn, "yyyy-MM-dd") : null,
+          checkout: firstRange ? format(firstRange.checkOut, "yyyy-MM-dd") : null,
+          rooms: roomsJson,
+          addons: addonsJson,
+          room_total: roomTotal,
+          addons_total: addonsTotal,
+          total_price: grandTotal,
+          coupon_code: appliedCoupon?.code || null,
+          payment_status: "pending",
+        } as any);
+      }
     }
 
     if (appliedCoupon?.code) {

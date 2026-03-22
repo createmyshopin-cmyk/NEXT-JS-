@@ -1,37 +1,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveTenantFromHostnameDb } from "@/lib/resolveTenantFromHost";
 
 /**
- * Resolves the current hostname to a tenant_id via the tenant_domains table.
- * Returns null when running on the root domain (no subdomain / localhost).
+ * Resolves the current hostname to a tenant_id via tenant_domains + platform apex rules.
+ * Returns null on marketing apex, localhost, or non-tenant hosts.
  */
 export async function resolveTenantFromHostname(): Promise<string | null> {
-  const hostname = window.location.hostname; // e.g. "acme.travelvoo.in" or "localhost"
-  const parts = hostname.split(".");
-
-  // On localhost or a single-segment host there is no subdomain
-  if (parts.length < 2) return null;
-
-  // Try matching by custom_domain first, then subdomain
-  const { data: byCustom } = await supabase
-    .from("tenant_domains")
-    .select("tenant_id")
-    .eq("custom_domain", hostname)
-    .maybeSingle();
-
-  if (byCustom?.tenant_id) return byCustom.tenant_id;
-
-  // Extract the leftmost segment as a subdomain
-  const subdomain = parts[0];
-
-  const { data: bySub } = await supabase
-    .from("tenant_domains")
-    .select("tenant_id")
-    .eq("subdomain", subdomain)
-    .maybeSingle();
-
-  return bySub?.tenant_id ?? null;
+  const { tenant } = await resolveTenantFromHostnameDb(supabase, window.location.hostname);
+  return tenant?.id ?? null;
 }
 
 export function useAdminAuth() {

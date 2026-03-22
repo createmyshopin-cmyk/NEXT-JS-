@@ -501,6 +501,24 @@ export default function AdminBookings() {
     const roomTotal = rooms.reduce((s: number, r: any) => s + (r.price || 0) * (r.count || 1), 0);
     const addonsTotal = addons.reduce((s: number, a: any) => s + (a.price || 0), 0);
 
+    let invoiceTenantId: string | null = booking.tenant_id ?? null;
+    if (!invoiceTenantId) {
+      const { data: rpcTid } = await supabase.rpc("get_my_tenant_id");
+      invoiceTenantId = rpcTid ?? null;
+    }
+    if (!invoiceTenantId && booking.stay_id) {
+      const { data: stayRow } = await supabase.from("stays").select("tenant_id").eq("id", booking.stay_id).maybeSingle();
+      invoiceTenantId = stayRow?.tenant_id ?? null;
+    }
+    if (!invoiceTenantId) {
+      toast({
+        title: "Error creating invoice",
+        description: "Could not resolve tenant for this booking.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
     const { error } = await supabase.from("invoices").insert({
       invoice_id: invoiceId,
       booking_id: booking.id,
@@ -508,7 +526,7 @@ export default function AdminBookings() {
       phone: booking.phone,
       email: booking.email,
       stay_id: booking.stay_id,
-      tenant_id: booking.tenant_id,
+      tenant_id: invoiceTenantId,
       checkin: booking.checkin,
       checkout: booking.checkout,
       rooms: booking.rooms,

@@ -59,6 +59,16 @@ export default function AdminQuotations() {
   };
 
   const convertToInvoice = async (q: any) => {
+    const { data: rpcTenantId, error: tidErr } = await supabase.rpc("get_my_tenant_id");
+    const tenantId = q.tenant_id ?? rpcTenantId;
+    if (!tenantId) {
+      toast({
+        title: "Error",
+        description: tidErr?.message ?? "Could not resolve tenant for this invoice.",
+        variant: "destructive",
+      });
+      return;
+    }
     const invoiceId = `INV-${Math.floor(2000 + Math.random() * 8000)}`;
     const { error } = await supabase.from("invoices").insert({
       invoice_id: invoiceId,
@@ -67,6 +77,7 @@ export default function AdminQuotations() {
       phone: q.phone,
       email: q.email,
       stay_id: q.stay_id,
+      tenant_id: tenantId,
       rooms: q.rooms,
       addons: q.addons,
       checkin: q.checkin,

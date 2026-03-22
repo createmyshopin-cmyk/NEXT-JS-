@@ -7,8 +7,8 @@
 --   2. Tenant row exists: run supabase/manual_link_demo_tenant_demo_at_demo_com.sql first.
 --   3. Tables: tenants, plans, subscriptions, site_settings (with tenant_id), banners (with tenant_id),
 --      optional marketplace_items / tenant_marketplace_installs for Plannet install.
---   4. Optional: **15 catalog stays + promo & announcement banners** — run
---      supabase/seed_demo_stays_and_banners.sql (after this file; skips if tenant already has stays).
+--   4. Optional: **60 catalog stays + 3 room_categories per stay** (HTTPS image URLs) — run
+--      supabase/seed_demo_stays_and_banners.sql (after this file; full 60 when demo-001 missing, or adds 031–060 / 016–060 for older partial seeds; rooms added when missing). No banners.
 --
 -- Run in Supabase SQL Editor (or supabase db execute).
 --

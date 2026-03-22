@@ -80,4 +80,5 @@ END $$;
 
 -- Optional next steps:
 --   - supabase/seed_demo_tenant_full_options.sql — plan features, settings, 15 hero slides, etc.
---   - supabase/seed_demo_stays_and_banners.sql — 15 stays + promo/announcement banners
+--   - supabase/seed_demo_stays_and_banners.sql — 60 stays + 3 room_categories per stay (no banners)
+--   - supabase/delete_demo_tenant_data.sql — wipe all data for demo@demo.com (re-run this file afterward if tenant row was removed)
