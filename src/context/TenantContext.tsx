@@ -1,6 +1,22 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { resolveTenantFromHostnameDb } from "@/lib/resolveTenantFromHost";
+import {
+  resolveTenantFromHostnameDb,
+  type ResolvedTenantFromHost,
+} from "@/lib/resolveTenantFromHost";
+
+const TENANT_RESOLVE_TIMEOUT_MS = 20_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Tenant resolution timeout")), ms);
+  });
+  return Promise.race([
+    promise.finally(() => clearTimeout(timeoutId)),
+    timeoutPromise,
+  ]);
+}
 
 interface TenantContextType {
   tenantId: string | null;
@@ -28,20 +44,36 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    resolveTenantFromHostnameDb(supabase, window.location.hostname)
-      .then(({ tenant, isSubdomain }) => {
-        if (tenant) {
-          setTenantId(tenant.id);
-          setTenantName(tenant.name);
-        } else if (isSubdomain) {
-          setNotFound(true);
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
+    let cancelled = false;
+    const hostname = window.location.hostname;
+
+    const apply = (r: ResolvedTenantFromHost) => {
+      if (cancelled) return;
+      if (r.tenant) {
+        setTenantId(r.tenant.id);
+        setTenantName(r.tenant.name);
+      } else if (r.isSubdomain) {
+        setNotFound(true);
+      }
+    };
+
+    (async () => {
+      try {
+        const result = await withTimeout(
+          resolveTenantFromHostnameDb(supabase, hostname),
+          TENANT_RESOLVE_TIMEOUT_MS
+        );
+        apply(result);
+      } catch (err) {
         console.error("[TenantProvider] resolveTenantFromHostnameDb failed", err);
-        setLoading(false);
-      });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
