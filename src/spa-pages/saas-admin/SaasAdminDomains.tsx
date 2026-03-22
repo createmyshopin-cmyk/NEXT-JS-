@@ -142,6 +142,17 @@ const SaasAdminDomains = () => {
     // Register custom domain with Vercel project (non-blocking)
     if (form.custom_domain) {
       supabase.functions.invoke("add-domain-to-vercel", { body: { domain: form.custom_domain } });
+      if (isAutoApproved) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.access_token) {
+            fetch("/api/auth/sync-domain", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+              body: JSON.stringify({ domain: form.custom_domain })
+            }).catch(console.error);
+          }
+        });
+      }
     }
 
     toast({
@@ -160,9 +171,23 @@ const SaasAdminDomains = () => {
       updates.ssl_status = "active";
     }
     await supabase.from("tenant_domains").update(updates).eq("id", id);
+    if (nowVerified) {
+      const domain = domains.find(d => d.id === id);
+      if (domain?.custom_domain) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.access_token) {
+            fetch("/api/auth/sync-domain", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+              body: JSON.stringify({ domain: domain.custom_domain })
+            }).catch(console.error);
+          }
+        });
+      }
+    }
     toast({
       title: current ? "Domain unverified" : "Domain verified",
-      description: nowVerified && platformConfig.autoSSL ? "SSL automatically activated" : undefined,
+      description: nowVerified && platformConfig.autoSSL ? "SSL automatically activated and domain auto-synced to Auth config" : (nowVerified ? "Domain auto-synced to Auth config" : undefined),
     });
     fetchAll();
   };

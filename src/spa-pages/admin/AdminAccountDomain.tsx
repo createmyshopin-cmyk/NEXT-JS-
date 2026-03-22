@@ -213,6 +213,22 @@ const AdminAccountDomain = () => {
           description: data?.message,
           variant: data?.verified ? "default" : "destructive",
         });
+
+        if (data?.verified) {
+          const domain = domains.find((d) => d.id === domainId);
+          if (domain?.custom_domain) {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+              if (session?.access_token) {
+                fetch("/api/auth/sync-domain", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+                  body: JSON.stringify({ domain: domain.custom_domain })
+                }).catch(console.error);
+              }
+            });
+          }
+        }
+
         await fetchData();
         setVerifying(null);
         return;
@@ -234,7 +250,16 @@ const AdminAccountDomain = () => {
 
       if (matched) {
         await supabase.from("tenant_domains").update({ verified: true, ssl_status: "active" } as any).eq("id", domainId);
-        toast({ title: "Domain Verified!", description: `CNAME → ${dns.cnameTarget} confirmed` });
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.access_token) {
+            fetch("/api/auth/sync-domain", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+              body: JSON.stringify({ domain: domain.custom_domain })
+            }).catch(console.error);
+          }
+        });
+        toast({ title: "Domain Verified!", description: `CNAME → ${dns.cnameTarget} confirmed. Synced to Auth.` });
       } else {
         toast({
           title: "DNS not propagated yet",
