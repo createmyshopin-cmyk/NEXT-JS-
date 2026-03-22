@@ -2,6 +2,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveTenantFromHostnameDb } from "@/lib/resolveTenantFromHost";
+import { platformBaseDomainFromEnv } from "@/lib/redirectTenantAdminDashboard";
+
+/** Build the marketing host login URL (e.g. https://travelvoo.in/login). */
+function marketingLoginUrl(): string {
+  const base = platformBaseDomainFromEnv();
+  const proto =
+    typeof window !== "undefined" && window.location.protocol === "http:" ? "http:" : "https:";
+  return `${proto}//${base}/login`;
+}
 
 /**
  * Resolves the current hostname to a tenant_id via tenant_domains + platform apex rules.
@@ -56,7 +65,7 @@ export function useAdminAuth() {
 
         if (!tenantRow) {
           // This user is an admin but NOT the owner of this specific subdomain
-          await supabase.auth.signOut();
+          await supabase.auth.signOut({ scope: "local" });
           setLoading(false);
           router.replace("/admin/login");
           return;
@@ -91,7 +100,8 @@ export function useAdminAuth() {
         setIsAdmin(false);
         setUser(null);
         setTenantId(null);
-        router.replace("/admin/login");
+        // Session cleared — hard-navigate to marketing login
+        window.location.replace(marketingLoginUrl());
       }
     });
 
@@ -101,8 +111,9 @@ export function useAdminAuth() {
   }, [router]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    router.replace("/admin/login");
+    await supabase.auth.signOut({ scope: "local" });
+    // Hard-navigate to marketing host login (cross-origin from tenant subdomain)
+    window.location.replace(marketingLoginUrl());
   };
 
   return { loading, isAdmin, user, tenantId, signOut };
