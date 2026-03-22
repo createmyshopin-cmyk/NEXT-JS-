@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Building2, Mail, Lock, Check, X, MessageCircle, Loader2 } from "lucide-react";
+import { redirectTenantAdminDashboard } from "@/lib/redirectTenantAdminDashboard";
 
 const slugifySubdomain = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/^-+|-+$/g, "");
@@ -94,7 +95,7 @@ const CreateTenantSignup = () => {
           return;
         }
         toast({ title: "Welcome aboard!", description: "Your account & 3-day trial are ready." });
-        router.push("/admin/dashboard");
+        await redirectTenantAdminDashboard(supabase, session.user.id, router);
       } catch (err: any) {
         toast({ title: "Signup failed", description: err?.message, variant: "destructive" });
         sessionStorage.removeItem("pendingTenantSignup");
@@ -121,7 +122,7 @@ const CreateTenantSignup = () => {
       const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: session.user.id, _role: "admin" });
       if (isAdmin) {
         toast({ title: "Not allowed", description: "Tenant accounts cannot create new accounts. Contact your SaaS administrator.", variant: "destructive" });
-        router.replace("/admin/dashboard");
+        await redirectTenantAdminDashboard(supabase, session.user.id, router);
         return;
       }
       setAuthChecking(false);
@@ -241,14 +242,16 @@ const CreateTenantSignup = () => {
 
       // New visitor signup — sign out any stale session first, then sign in as the new account
       await supabase.auth.signOut();
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
         email: form.email.trim().toLowerCase(),
         password: form.password,
       });
       if (signInErr) throw signInErr;
+      const newUserId = signInData.user?.id;
+      if (!newUserId) throw new Error("Sign-in succeeded but user id is missing.");
 
       toast({ title: "Welcome aboard!", description: "Your account & 3-day trial are ready." });
-      router.push("/admin/dashboard");
+      await redirectTenantAdminDashboard(supabase, newUserId, router);
     } catch (err: any) {
       toast({ title: "Signup failed", description: err.message, variant: "destructive" });
     } finally {

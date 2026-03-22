@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { isTenantLoginMarketingRedirectHost } from "@/lib/resolveTenantFromHost";
+import { redirectTenantAdminDashboard } from "@/lib/redirectTenantAdminDashboard";
 import { Lock, Loader2 } from "lucide-react";
 
 /**
@@ -35,22 +35,7 @@ export default function Login() {
       return;
     }
     toast({ title: "Welcome back!", description: "Redirecting to dashboard..." });
-    const hostname = window.location.hostname;
-    // Marketing / main domain (e.g. travelvoo.in): optional redirect to tenant subdomain admin
-    if (isTenantLoginMarketingRedirectHost(hostname)) {
-      const { data: tenant } = await supabase.from("tenants").select("id").eq("user_id", userId).maybeSingle();
-      if (tenant) {
-        const { data: domain } = await supabase.from("tenant_domains").select("subdomain").eq("tenant_id", tenant.id).not("subdomain", "is", null).limit(1).maybeSingle();
-        const { data: suffixRow } = await supabase.from("saas_platform_settings").select("setting_value").eq("setting_key", "platform_subdomain_suffix").maybeSingle();
-        const suffix = suffixRow?.setting_value || ".travelvoo.in";
-        const baseDomain = suffix.replace(/^\./, "");
-        if (domain?.subdomain && baseDomain) {
-          window.location.href = `https://${domain.subdomain}.${baseDomain}/admin/dashboard`;
-          return;
-        }
-      }
-    }
-    router.replace("/admin/dashboard");
+    await redirectTenantAdminDashboard(supabase, userId, router);
   };
 
   useEffect(() => {

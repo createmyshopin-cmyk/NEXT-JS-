@@ -9,6 +9,7 @@ import { Eye, EyeOff, Lock } from "lucide-react";
 import { resolveTenantFromHostname } from "@/hooks/useAdminAuth";
 import { DemoLoginHint, DEMO_TENANT_ADMIN } from "@/components/DemoLoginHint";
 import { loginFailureDescription } from "@/lib/loginFailureMessage";
+import { redirectTenantAdminDashboard } from "@/lib/redirectTenantAdminDashboard";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -67,7 +68,7 @@ export default function AdminLogin() {
     }
 
     toast({ title: "Welcome back!", description: "Redirecting to dashboard..." });
-    router.push("/admin/dashboard");
+    await redirectTenantAdminDashboard(supabase, data.user.id, router);
     setLoading(false);
   };
 
