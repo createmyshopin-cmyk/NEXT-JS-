@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
@@ -8,8 +9,9 @@ import { SubscriptionBanner } from "./SubscriptionBanner";
 import { NewBookingPopup } from "./NewBookingPopup";
 import { useBookingNotification } from "@/hooks/useBookingNotification";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
+import { usePlatformMaintenanceMode } from "@/hooks/usePlatformMaintenanceMode";
 import { useRouter, usePathname } from "next/navigation";
-import { AlertCircle, ShieldOff, ArrowUpCircle, Lock } from "lucide-react";
+import { AlertCircle, ShieldOff, ArrowUpCircle, Lock, WrenchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const FEATURE_ROUTES: Record<string, { key: string; label: string }> = {
@@ -30,6 +32,67 @@ function BookingNotificationListener() {
     <>
       <NewBookingPopup booking={newBooking} onClose={clearNewBooking} />
     </>
+  );
+}
+
+function PlatformMaintenanceOverlay() {
+  const { isEnabled, loading } = usePlatformMaintenanceMode();
+  if (loading || !isEnabled) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="platform-maintenance"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="absolute inset-0 z-[9999] flex items-center justify-center p-4"
+        style={{ backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", background: "rgba(0,0,0,0.5)" }}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.88, y: 28 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.08 }}
+          className="bg-background w-full max-w-sm rounded-3xl shadow-2xl px-8 py-10 flex flex-col items-center text-center overflow-hidden relative"
+          role="alertdialog"
+          aria-modal="true"
+          aria-label="Platform under maintenance"
+        >
+          {/* Glow */}
+          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full opacity-20 blur-3xl bg-primary" />
+
+          {/* Animated icon */}
+          <motion.div
+            animate={{ rotate: [0, -12, 12, -8, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
+            className="mb-5 p-4 rounded-2xl bg-primary/10"
+          >
+            <WrenchIcon className="w-10 h-10 text-primary" />
+          </motion.div>
+
+          <h1 className="text-[22px] font-extrabold text-foreground leading-tight">
+            We're Under Maintenance
+          </h1>
+
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+            We are currently <strong className="text-foreground">not accepting new bookings.</strong>
+            <br />
+            Our team is working hard behind the scenes. We'll be back shortly!
+          </p>
+
+          {/* Pulsing dots */}
+          <div className="flex items-center gap-2 mt-6">
+            {[0, 0.2, 0.4].map((delay, i) => (
+              <motion.span
+                key={i}
+                animate={{ opacity: [0.25, 1, 0.25], scale: [0.8, 1.2, 0.8] }}
+                transition={{ duration: 1.4, repeat: Infinity, delay }}
+                className="w-2 h-2 rounded-full bg-primary"
+              />
+            ))}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -156,6 +219,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <h1 className="text-lg font-semibold text-foreground">Stay Admin</h1>
           </header>
           <main className="relative flex-1 p-4 md:p-6 overflow-auto">
+            <PlatformMaintenanceOverlay />
             <SubscriptionLockOverlay />
             <FeatureLockOverlay />
             <SubscriptionBanner />
