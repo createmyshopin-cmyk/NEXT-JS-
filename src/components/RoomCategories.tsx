@@ -30,6 +30,7 @@ const RoomCard = ({
   onToggle: () => void;
   onCountChange: (count: number) => void;
 }) => {
+  const { format } = useCurrency();
   const [imgIdx, setImgIdx] = useState(0);
   const savings = room.originalPrice - room.price;
   const hasSavings = savings > 0;
