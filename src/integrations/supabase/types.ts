@@ -55,7 +55,7 @@ export type Database = {
           reference_number: string | null
           stay_id: string | null
           tags: string[] | null
-          tenant_id: string | null
+          tenant_id: string
           type: string
           updated_at: string | null
         }
@@ -74,7 +74,7 @@ export type Database = {
           reference_number?: string | null
           stay_id?: string | null
           tags?: string[] | null
-          tenant_id?: string | null
+          tenant_id?: string
           type: string
           updated_at?: string | null
         }
@@ -93,7 +93,7 @@ export type Database = {
           reference_number?: string | null
           stay_id?: string | null
           tags?: string[] | null
-          tenant_id?: string | null
+          tenant_id?: string
           type?: string
           updated_at?: string | null
         }
@@ -118,7 +118,7 @@ export type Database = {
           name: string
           price: number
           stay_id: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           active?: boolean
@@ -130,7 +130,7 @@ export type Database = {
           name: string
           price?: number
           stay_id: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           active?: boolean
@@ -142,7 +142,7 @@ export type Database = {
           name?: string
           price?: number
           stay_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -168,7 +168,7 @@ export type Database = {
           id: string
           query: string
           results_count: number
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           created_at?: string
@@ -176,7 +176,7 @@ export type Database = {
           id?: string
           query: string
           results_count?: number
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           created_at?: string
@@ -184,7 +184,7 @@ export type Database = {
           id?: string
           query?: string
           results_count?: number
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -326,7 +326,7 @@ export type Database = {
           is_active: boolean
           sort_order: number
           subtitle: string | null
-          tenant_id: string | null
+          tenant_id: string
           title: string
           type: string
         }
@@ -339,7 +339,7 @@ export type Database = {
           is_active?: boolean
           sort_order?: number
           subtitle?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           title: string
           type?: string
         }
@@ -352,7 +352,7 @@ export type Database = {
           is_active?: boolean
           sort_order?: number
           subtitle?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
           type?: string
         }
@@ -374,7 +374,7 @@ export type Database = {
           id: string
           label: string
           notes: string | null
-          tenant_id: string | null
+          tenant_id: string
           type: string
         }
         Insert: {
@@ -384,7 +384,7 @@ export type Database = {
           id?: string
           label: string
           notes?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           type: string
         }
         Update: {
@@ -394,7 +394,7 @@ export type Database = {
           id?: string
           label?: string
           notes?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           type?: string
         }
         Relationships: [
@@ -415,7 +415,7 @@ export type Database = {
           id: string
           note: string
           status: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           booking_id: string
@@ -424,7 +424,7 @@ export type Database = {
           id?: string
           note?: string
           status: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           booking_id?: string
@@ -433,7 +433,7 @@ export type Database = {
           id?: string
           note?: string
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -475,7 +475,7 @@ export type Database = {
           special_requests: string | null
           status: string
           stay_id: string | null
-          tenant_id: string | null
+          tenant_id: string
           total_price: number
         }
         Insert: {
@@ -500,7 +500,7 @@ export type Database = {
           special_requests?: string | null
           status?: string
           stay_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           total_price?: number
         }
         Update: {
@@ -525,7 +525,7 @@ export type Database = {
           special_requests?: string | null
           status?: string
           stay_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           total_price?: number
         }
         Relationships: [
@@ -558,7 +558,7 @@ export type Database = {
           price: number
           room_category_id: string | null
           stay_id: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           available?: number
@@ -572,7 +572,7 @@ export type Database = {
           price?: number
           room_category_id?: string | null
           stay_id: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           available?: number
@@ -586,7 +586,7 @@ export type Database = {
           price?: number
           room_category_id?: string | null
           stay_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -625,7 +625,7 @@ export type Database = {
           min_purchase: number
           show_publicly: boolean
           starts_at: string | null
-          tenant_id: string | null
+          tenant_id: string
           type: string
           usage_count: number
           usage_limit: number | null
@@ -643,7 +643,7 @@ export type Database = {
           min_purchase?: number
           show_publicly?: boolean
           starts_at?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           type?: string
           usage_count?: number
           usage_limit?: number | null
@@ -661,7 +661,7 @@ export type Database = {
           min_purchase?: number
           show_publicly?: boolean
           starts_at?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           type?: string
           usage_count?: number
           usage_limit?: number | null
@@ -707,7 +707,7 @@ export type Database = {
           id: string
           session_id: string
           stay_id: string
-          tenant_id: string | null
+          tenant_id: string
           user_id: string | null
         }
         Insert: {
@@ -715,7 +715,7 @@ export type Database = {
           id?: string
           session_id: string
           stay_id: string
-          tenant_id?: string | null
+          tenant_id?: string
           user_id?: string | null
         }
         Update: {
@@ -723,7 +723,7 @@ export type Database = {
           id?: string
           session_id?: string
           stay_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
           user_id?: string | null
         }
         Relationships: [
@@ -1153,7 +1153,7 @@ export type Database = {
           room_total: number
           rooms: Json
           stay_id: string | null
-          tenant_id: string | null
+          tenant_id: string
           total_price: number
           updated_at: string
         }
@@ -1177,7 +1177,7 @@ export type Database = {
           room_total?: number
           rooms?: Json
           stay_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           total_price?: number
           updated_at?: string
         }
@@ -1201,7 +1201,7 @@ export type Database = {
           room_total?: number
           rooms?: Json
           stay_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           total_price?: number
           updated_at?: string
         }
@@ -1247,7 +1247,7 @@ export type Database = {
           phone: string
           source: string
           status: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           created_at?: string
@@ -1259,7 +1259,7 @@ export type Database = {
           phone: string
           source?: string
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           created_at?: string
@@ -1271,7 +1271,7 @@ export type Database = {
           phone?: string
           source?: string
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -1350,7 +1350,7 @@ export type Database = {
           created_at: string
           id: string
           stay_id: string | null
-          tenant_id: string | null
+          tenant_id: string
           url: string
         }
         Insert: {
@@ -1359,7 +1359,7 @@ export type Database = {
           created_at?: string
           id?: string
           stay_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           url: string
         }
         Update: {
@@ -1368,7 +1368,7 @@ export type Database = {
           created_at?: string
           id?: string
           stay_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           url?: string
         }
         Relationships: [
@@ -1399,7 +1399,7 @@ export type Database = {
           name: string
           price: number | null
           sort_order: number | null
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           category?: string
@@ -1411,7 +1411,7 @@ export type Database = {
           name: string
           price?: number | null
           sort_order?: number | null
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           category?: string
@@ -1423,7 +1423,7 @@ export type Database = {
           name?: string
           price?: number | null
           sort_order?: number | null
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -1446,7 +1446,7 @@ export type Database = {
           name: string
           sort_order: number
           stay_id: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           created_at?: string
@@ -1458,7 +1458,7 @@ export type Database = {
           name?: string
           sort_order?: number
           stay_id: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           created_at?: string
@@ -1470,7 +1470,7 @@ export type Database = {
           name?: string
           sort_order?: number
           stay_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -1496,7 +1496,7 @@ export type Database = {
           id: string
           read: boolean
           ref_id: string | null
-          tenant_id: string | null
+          tenant_id: string
           title: string
           type: string
         }
@@ -1506,7 +1506,7 @@ export type Database = {
           id?: string
           read?: boolean
           ref_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           title: string
           type?: string
         }
@@ -1516,7 +1516,7 @@ export type Database = {
           id?: string
           read?: boolean
           ref_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
           type?: string
         }
@@ -1621,7 +1621,7 @@ export type Database = {
           stats_text: string
           subtitle: string
           template_type: string
-          tenant_id: string | null
+          tenant_id: string
           title: string
           updated_at: string
         }
@@ -1641,7 +1641,7 @@ export type Database = {
           stats_text?: string
           subtitle?: string
           template_type?: string
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
           updated_at?: string
         }
@@ -1661,7 +1661,7 @@ export type Database = {
           stats_text?: string
           subtitle?: string
           template_type?: string
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
           updated_at?: string
         }
@@ -1683,7 +1683,7 @@ export type Database = {
           icon_name: string
           id: string
           sort_order: number
-          tenant_id: string | null
+          tenant_id: string
           title: string
         }
         Insert: {
@@ -1693,7 +1693,7 @@ export type Database = {
           icon_name?: string
           id?: string
           sort_order?: number
-          tenant_id?: string | null
+          tenant_id?: string
           title: string
         }
         Update: {
@@ -1703,7 +1703,7 @@ export type Database = {
           icon_name?: string
           id?: string
           sort_order?: number
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
         }
         Relationships: [
@@ -1736,7 +1736,7 @@ export type Database = {
           special_requests: string | null
           status: string
           stay_id: string | null
-          tenant_id: string | null
+          tenant_id: string
           total_price: number
           updated_at: string
         }
@@ -1759,7 +1759,7 @@ export type Database = {
           special_requests?: string | null
           status?: string
           stay_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           total_price?: number
           updated_at?: string
         }
@@ -1782,7 +1782,7 @@ export type Database = {
           special_requests?: string | null
           status?: string
           stay_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           total_price?: number
           updated_at?: string
         }
@@ -1814,7 +1814,7 @@ export type Database = {
           rating: number
           status: string
           stay_id: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           avatar_url?: string | null
@@ -1826,7 +1826,7 @@ export type Database = {
           rating?: number
           status?: string
           stay_id: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           avatar_url?: string | null
@@ -1838,7 +1838,7 @@ export type Database = {
           rating?: number
           status?: string
           stay_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -1868,7 +1868,7 @@ export type Database = {
           original_price: number
           price: number
           stay_id: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           amenities?: string[]
@@ -1880,7 +1880,7 @@ export type Database = {
           original_price?: number
           price?: number
           stay_id: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           amenities?: string[]
@@ -1892,7 +1892,7 @@ export type Database = {
           original_price?: number
           price?: number
           stay_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -2009,7 +2009,7 @@ export type Database = {
           stories_duration: number | null
           stories_enabled: boolean | null
           stories_section_title: string | null
-          tenant_id: string | null
+          tenant_id: string
           theme_tokens: Json
           updated_at: string
           whatsapp_number: string
@@ -2057,7 +2057,7 @@ export type Database = {
           stories_duration?: number | null
           stories_enabled?: boolean | null
           stories_section_title?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           theme_tokens?: Json
           updated_at?: string
           whatsapp_number?: string
@@ -2105,7 +2105,7 @@ export type Database = {
           stories_duration?: number | null
           stories_enabled?: boolean | null
           stories_section_title?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           theme_tokens?: Json
           updated_at?: string
           whatsapp_number?: string
@@ -2166,7 +2166,7 @@ export type Database = {
           id: string
           label: string
           sort_order: number
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           active?: boolean
@@ -2175,7 +2175,7 @@ export type Database = {
           id?: string
           label: string
           sort_order?: number
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           active?: boolean
@@ -2184,7 +2184,7 @@ export type Database = {
           id?: string
           label?: string
           sort_order?: number
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -2203,7 +2203,7 @@ export type Database = {
           platform: string
           sort_order: number
           stay_id: string
-          tenant_id: string | null
+          tenant_id: string
           thumbnail: string
           title: string
           url: string
@@ -2214,7 +2214,7 @@ export type Database = {
           platform?: string
           sort_order?: number
           stay_id: string
-          tenant_id?: string | null
+          tenant_id?: string
           thumbnail?: string
           title?: string
           url?: string
@@ -2225,7 +2225,7 @@ export type Database = {
           platform?: string
           sort_order?: number
           stay_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
           thumbnail?: string
           title?: string
           url?: string
@@ -2271,7 +2271,7 @@ export type Database = {
           seo_title: string | null
           status: string
           stay_id: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           amenities?: string[]
@@ -2296,7 +2296,7 @@ export type Database = {
           seo_title?: string | null
           status?: string
           stay_id: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           amenities?: string[]
@@ -2321,7 +2321,7 @@ export type Database = {
           seo_title?: string | null
           status?: string
           stay_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -3024,7 +3024,7 @@ export type Database = {
           slug: string
           starting_price: number
           status: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           cancellation_policy?: Json | null
@@ -3056,7 +3056,7 @@ export type Database = {
           slug: string
           starting_price?: number
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Update: {
           cancellation_policy?: Json | null
@@ -3088,7 +3088,7 @@ export type Database = {
           slug?: string
           starting_price?: number
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {

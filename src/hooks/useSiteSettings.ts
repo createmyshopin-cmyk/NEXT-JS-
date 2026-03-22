@@ -6,7 +6,7 @@ import { clearPlatformTenantIdCache, getPlatformTenantId } from "@/lib/platformT
 
 interface SiteSettings {
   id: string;
-  tenant_id: string | null;
+  tenant_id: string;
   /** Declarative landing theme preset (allowlisted in app). */
   landing_theme_slug?: string | null;
   /** Allowlisted CSS variables as JSON object. */
