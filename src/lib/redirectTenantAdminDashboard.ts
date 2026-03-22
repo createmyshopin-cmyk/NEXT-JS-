@@ -10,6 +10,14 @@ function normalizeSubdomain(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/^-+|-+$/g, "");
 }
 
+/** Apex for tenant subdomains (no leading dot, no www). */
+export function platformBaseDomainFromEnv(): string {
+  const raw = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_PLATFORM_BASE_DOMAIN?.trim().toLowerCase() ?? "" : "";
+  let s = raw.replace(/^\./, "");
+  if (s.startsWith("www.")) s = s.slice(4);
+  return s || "travelvoo.in";
+}
+
 /**
  * On marketing apex / www (no tenant in hostname), send the tenant admin to their subdomain dashboard.
  * On tenant hosts or when subdomain is unknown, stay on current origin with `/admin/dashboard`.
@@ -26,6 +34,13 @@ export async function redirectTenantAdminDashboard(
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
   if (!isTenantLoginMarketingRedirectHost(hostname)) {
     router.replace("/admin/dashboard");
+    return;
+  }
+
+  const slugImmediate = normalizeSubdomain(options?.knownSubdomain ?? "");
+  if (slugImmediate.length >= 2 && typeof window !== "undefined") {
+    const base = platformBaseDomainFromEnv();
+    window.location.href = `https://${slugImmediate}.${base}/admin/dashboard`;
     return;
   }
 
