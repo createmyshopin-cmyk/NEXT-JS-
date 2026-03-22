@@ -95,7 +95,8 @@ const CreateTenantSignup = () => {
           return;
         }
         toast({ title: "Welcome aboard!", description: "Your account & 3-day trial are ready." });
-        await redirectTenantAdminDashboard(supabase, session.user.id, router);
+        const oauthSlug = slugifySubdomain(subdomain || "");
+        await redirectTenantAdminDashboard(supabase, session.user.id, router, { knownSubdomain: oauthSlug });
       } catch (err: any) {
         toast({ title: "Signup failed", description: err?.message, variant: "destructive" });
         sessionStorage.removeItem("pendingTenantSignup");
@@ -251,7 +252,7 @@ const CreateTenantSignup = () => {
       if (!newUserId) throw new Error("Sign-in succeeded but user id is missing.");
 
       toast({ title: "Welcome aboard!", description: "Your account & 3-day trial are ready." });
-      await redirectTenantAdminDashboard(supabase, newUserId, router);
+      await redirectTenantAdminDashboard(supabase, newUserId, router, { knownSubdomain: slug });
     } catch (err: any) {
       toast({ title: "Signup failed", description: err.message, variant: "destructive" });
     } finally {
