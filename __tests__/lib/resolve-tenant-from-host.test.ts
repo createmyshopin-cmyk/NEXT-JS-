@@ -34,6 +34,9 @@ describe("isTenantLoginMarketingRedirectHost", () => {
   it("treats 2-label apex as marketing", () => {
     expect(isTenantLoginMarketingRedirectHost("travelvoo.in")).toBe(true);
   });
+  it("treats www.<apex> as marketing without env (build-time env optional)", () => {
+    expect(isTenantLoginMarketingRedirectHost("www.travelvoo.in")).toBe(true);
+  });
   it("treats tenant subdomain as non-marketing", () => {
     expect(isTenantLoginMarketingRedirectHost("demo.travelvoo.in")).toBe(false);
   });

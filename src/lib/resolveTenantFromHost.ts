@@ -58,6 +58,8 @@ export function isTenantLoginMarketingRedirectHost(hostname: string): boolean {
   const h = hostname.toLowerCase();
   const parts = h.split(".");
   if (parts.length <= 2) return true;
+  // www.<apex> is the marketing host even when NEXT_PUBLIC_PLATFORM_BASE_DOMAIN was not baked into the client bundle.
+  if (parts.length >= 3 && parts[0] === "www") return true;
   for (const base of envPlatformBaseDomains()) {
     if (h === base || h === `www.${base}`) return true;
   }
