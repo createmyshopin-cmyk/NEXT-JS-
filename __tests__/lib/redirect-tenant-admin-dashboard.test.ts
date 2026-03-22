@@ -96,6 +96,7 @@ describe("redirectTenantAdminDashboard", () => {
 
   it("on www: uses NEXT_PUBLIC_PLATFORM_BASE_DOMAIN apex for URL", async () => {
     process.env.NEXT_PUBLIC_PLATFORM_BASE_DOMAIN = "example.com";
+    stubWindow("www.example.com");
     const supabase = supabaseWithSession();
 
     await redirectTenantAdminDashboard(supabase, "user-1", { replace: routerReplaceMock }, { knownSubdomain: "demo" });

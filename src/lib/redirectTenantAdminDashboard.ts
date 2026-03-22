@@ -59,6 +59,7 @@ export async function redirectTenantAdminDashboard(
   options?: RedirectTenantAdminOptions
 ): Promise<void> {
   if (!redirectAdminToTenantSubdomainEnabled()) {
+    console.info("[redirect] subdomain redirect disabled, staying on current origin");
     router.replace("/admin/dashboard");
     return;
   }
@@ -67,6 +68,7 @@ export async function redirectTenantAdminDashboard(
 
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
   if (!isTenantLoginMarketingRedirectHost(hostname)) {
+    console.info(`[redirect] host ${hostname} is not marketing, staying on current origin`);
     router.replace("/admin/dashboard");
     return;
   }
@@ -74,7 +76,9 @@ export async function redirectTenantAdminDashboard(
   const slugImmediate = normalizeSubdomain(options?.knownSubdomain ?? "");
   if (slugImmediate.length >= 2 && typeof window !== "undefined") {
     const base = platformBaseDomainFromEnv();
-    navigateHard(tenantAdminAbsoluteUrl(slugImmediate, base));
+    const url = tenantAdminAbsoluteUrl(slugImmediate, base);
+    console.info(`[redirect] fast-path: navigating to ${url}`);
+    navigateHard(url);
     return;
   }
 
@@ -122,9 +126,12 @@ export async function redirectTenantAdminDashboard(
   }
 
   if (slug && baseDomain) {
-    navigateHard(tenantAdminAbsoluteUrl(slug, baseDomain));
+    const url = tenantAdminAbsoluteUrl(slug, baseDomain);
+    console.info(`[redirect] DB resolved slug=${slug}, navigating to ${url}`);
+    navigateHard(url);
     return;
   }
 
+  console.info(`[redirect] no slug resolved for userId=${userId}, staying on current origin`);
   router.replace("/admin/dashboard");
 }

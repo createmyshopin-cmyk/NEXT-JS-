@@ -52,6 +52,16 @@ describe("isTenantLoginMarketingRedirectHost", () => {
     expect(isTenantLoginMarketingRedirectHost("www.travelvoo.co.in")).toBe(true);
     expect(isTenantLoginMarketingRedirectHost("demo.travelvoo.co.in")).toBe(false);
   });
+
+  it("does NOT treat www.unrelated.com as marketing (catch-all removed)", () => {
+    process.env.NEXT_PUBLIC_PLATFORM_BASE_DOMAIN = "travelvoo.in";
+    expect(isTenantLoginMarketingRedirectHost("www.unrelated.com")).toBe(false);
+  });
+
+  it("www.travelvoo.in remains marketing after catch-all removal (via default base)", () => {
+    // env unset — default base is travelvoo.in
+    expect(isTenantLoginMarketingRedirectHost("www.travelvoo.in")).toBe(true);
+  });
 });
 
 describe("resolveTenantFromHostnameDb", () => {

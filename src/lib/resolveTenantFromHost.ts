@@ -88,12 +88,14 @@ export function isTenantLoginMarketingRedirectHost(hostname: string): boolean {
 
   const parts = h.split(".");
   if (parts.length <= 2) return true;
-  // www.<apex> when apex is two labels (e.g. www.travelvoo.in) — env optional
-  if (parts.length >= 3 && parts[0] === "www") return true;
+
+  // Remaining env-based check (covers multi-domain setups not yet matched above)
   for (const base of envPlatformBaseDomains()) {
     const b = normalizeMarketingBaseDomain(base);
     if (h === b || h === `www.${b}`) return true;
   }
+
+  // 3+ labels not matched against any known base → tenant subdomain
   return false;
 }
 
