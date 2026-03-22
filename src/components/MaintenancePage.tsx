@@ -1,88 +1,99 @@
-import { motion } from "framer-motion";
-import { WrenchIcon, Clock, Mail, Phone } from "lucide-react";
-import { useBranding } from "@/context/BrandingContext";
+"use client";
 
-const MaintenancePage = () => {
+import { motion } from "framer-motion";
+import { WrenchIcon, PhoneCall } from "lucide-react";
+import { useBranding } from "@/context/BrandingContext";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+
+const MaintenanceOverlay = () => {
   const { siteName, logoUrl, primaryColor } = useBranding();
+  const { settings } = useSiteSettings();
+  const phone = settings?.whatsapp_number || settings?.contact_phone;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center">
-      {/* Animated gear illustration */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      style={{ backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", background: "rgba(0,0,0,0.45)" }}
+    >
+      {/* Modal card */}
       <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-        className="mb-6 text-primary"
+        initial={{ opacity: 0, scale: 0.88, y: 32 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.1 }}
+        className="relative bg-background w-full max-w-sm rounded-3xl shadow-2xl px-8 py-10 flex flex-col items-center text-center overflow-hidden"
+        role="alertdialog"
+        aria-modal="true"
+        aria-label="Site under maintenance"
       >
-        <WrenchIcon className="w-16 h-16" style={{ color: primaryColor || undefined }} />
-      </motion.div>
+        {/* Glow blob behind the icon */}
+        <div
+          className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full opacity-20 blur-3xl"
+          style={{ backgroundColor: primaryColor || "hsl(var(--primary))" }}
+        />
 
-      {/* Logo / site name */}
-      <div className="mb-2">
-        {logoUrl ? (
-          <img src={logoUrl} alt={siteName} className="h-10 mx-auto object-contain" />
-        ) : (
-          <span className="text-2xl font-extrabold tracking-tight text-primary" style={{ color: primaryColor || undefined }}>
-            {siteName}
-          </span>
-        )}
-      </div>
-
-      <motion.h1
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="text-3xl font-bold text-foreground mt-4"
-      >
-        We'll be back soon
-      </motion.h1>
-
-      <motion.p
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="mt-3 text-muted-foreground max-w-sm text-sm leading-relaxed"
-      >
-        We're performing scheduled maintenance to improve your experience.
-        We should be back shortly. Thank you for your patience.
-      </motion.p>
-
-      {/* Pulsing dots */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="flex items-center gap-2 mt-8"
-      >
-        {[0, 0.2, 0.4].map((delay, i) => (
-          <motion.span
-            key={i}
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 1.2, repeat: Infinity, delay }}
-            className="w-2.5 h-2.5 rounded-full bg-primary"
-            style={{ backgroundColor: primaryColor || undefined }}
+        {/* Animated icon */}
+        <motion.div
+          animate={{ rotate: [0, -12, 12, -8, 8, 0] }}
+          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
+          className="mb-5 p-4 rounded-2xl"
+          style={{ background: `${primaryColor || "hsl(var(--primary))"}22` }}
+        >
+          <WrenchIcon
+            className="w-10 h-10"
+            style={{ color: primaryColor || "hsl(var(--primary))" }}
           />
-        ))}
-      </motion.div>
+        </motion.div>
 
-      {/* Contact info */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="mt-10 flex flex-col sm:flex-row items-center gap-4 text-sm text-muted-foreground"
-      >
-        <ContactChip icon={<Clock className="w-3.5 h-3.5" />} label="Estimated time: a few minutes" />
-        <ContactChip icon={<Mail className="w-3.5 h-3.5" />} label="Contact us if urgent" />
+        {/* Logo / site name */}
+        {logoUrl ? (
+          <img src={logoUrl} alt={siteName} className="h-7 mx-auto object-contain mb-4" />
+        ) : (
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">
+            {siteName}
+          </p>
+        )}
+
+        <h1 className="text-[22px] font-extrabold text-foreground leading-tight">
+          We're Under Maintenance
+        </h1>
+
+        <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+          We are currently <strong className="text-foreground">not accepting new bookings.</strong>
+          <br />
+          Our team is working hard behind the scenes. We'll be back shortly!
+        </p>
+
+        {/* Pulsing dots */}
+        <div className="flex items-center gap-2 mt-6">
+          {[0, 0.2, 0.4].map((delay, i) => (
+            <motion.span
+              key={i}
+              animate={{ opacity: [0.25, 1, 0.25], scale: [0.8, 1.2, 0.8] }}
+              transition={{ duration: 1.4, repeat: Infinity, delay }}
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: primaryColor || "hsl(var(--primary))" }}
+            />
+          ))}
+        </div>
+
+        {/* Contact CTA */}
+        {phone && (
+          <a
+            href={`https://wa.me/${phone.replace(/\D/g, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-7 flex items-center gap-2 text-sm font-semibold px-6 py-3 rounded-full text-white transition-opacity hover:opacity-90 active:scale-95"
+            style={{ backgroundColor: primaryColor || "hsl(var(--primary))" }}
+          >
+            <PhoneCall className="w-4 h-4" />
+            Contact Us
+          </a>
+        )}
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
 
-const ContactChip = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
-  <span className="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1.5">
-    {icon}
-    {label}
-  </span>
-);
-
-export default MaintenancePage;
+export default MaintenanceOverlay;
