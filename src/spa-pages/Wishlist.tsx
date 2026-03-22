@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPlatformTenantId } from "@/lib/platformTenant";
 import type { Stay } from "@/types/stay";
+import { stayPublicPath } from "@/lib/stayPublicUrl";
 
 const fallbackImages = ["/assets/stay-1.jpg", "/assets/stay-2.jpg", "/assets/stay-3.jpg", "/assets/stay-4.jpg"];
 
@@ -102,13 +103,13 @@ const Wishlist = () => {
                   src={stay.images[0]}
                   alt={stay.name}
                   className="w-28 h-28 object-cover shrink-0 cursor-pointer"
-                  onClick={() => router.push(`/stay/${stay.id}`)}
+                  onClick={() => router.push(stayPublicPath(stay))}
                 />
                 <div className="flex-1 py-2.5 pr-3 flex flex-col justify-between">
                   <div>
                     <p
                       className="text-sm font-bold text-card-foreground truncate cursor-pointer"
-                      onClick={() => router.push(`/stay/${stay.id}`)}
+                      onClick={() => router.push(stayPublicPath(stay))}
                     >
                       {stay.name}
                     </p>

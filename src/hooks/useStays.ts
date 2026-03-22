@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/context/TenantContext";
 import { getPlatformTenantId } from "@/lib/platformTenant";
+import { looksLikeStayUuid } from "@/lib/stayPublicUrl";
 import type { Stay, RoomCategory, Review, Reel, NearbyDestination } from "@/types/stay";
 
 // Module-level cache: key = "tenantId|category" so tenant subdomains get fresh empty data
@@ -178,12 +179,6 @@ export function useStays(category?: string) {
   return { stays: staysWithCalendarPrices, loading, refetch: fetchStays };
 }
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function looksLikeUuid(s: string): boolean {
-  return UUID_RE.test(s.trim());
-}
-
 export function useStayDetail(stayId: string | undefined) {
   const { tenantId, loading: tenantLoading } = useTenant();
   const [stay, setStay] = useState<Stay | null>(null);
@@ -220,12 +215,21 @@ export function useStayDetail(stayId: string | undefined) {
 
       try {
         const key = decodeURIComponent(stayId.trim());
-        const { data: byId } = await supabase.from("stays").select("*").eq("id", key).maybeSingle();
-        const stayData =
-          byId ??
-          (!looksLikeUuid(key)
-            ? (await supabase.from("stays").select("*").eq("stay_id", key).maybeSingle()).data ?? null
-            : null);
+        let stayData;
+        if (looksLikeStayUuid(key)) {
+          const { data } = await supabase.from("stays").select("*").eq("id", key).maybeSingle();
+          stayData = data;
+        } else {
+          let q = supabase.from("stays").select("*").eq("stay_id", key);
+          if (tenantId) {
+            q = q.eq("tenant_id", tenantId);
+          } else {
+            const pid = await getPlatformTenantId();
+            if (pid) q = q.eq("tenant_id", pid);
+          }
+          const { data } = await q.maybeSingle();
+          stayData = data ?? null;
+        }
 
         if (stayData) {
           const platformId = await getPlatformTenantId();

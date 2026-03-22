@@ -37,7 +37,10 @@ interface BookingFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   stayName: string;
+  /** DB primary key — used for room/booking queries */
   stayId: string;
+  /** Public `stay_id` slug for share URLs (optional; falls back to stayId) */
+  stayPublicSlug?: string;
   roomCategories: RoomCategory[];
   preselectedRooms?: RoomSelection[];
   autoAppliedCoupon?: { code: string; discount: number } | null;
@@ -69,7 +72,19 @@ const Stepper = ({ value, onChange, min = 0, max = 10, label }: { value: number;
   </div>
 );
 
-const BookingFormModal = ({ open, onOpenChange, stayName, stayId, roomCategories: initialRoomCategories, preselectedRooms, autoAppliedCoupon, maxAdults = 20, maxChildren = 5, maxPets = 5 }: BookingFormModalProps) => {
+const BookingFormModal = ({
+  open,
+  onOpenChange,
+  stayName,
+  stayId,
+  stayPublicSlug,
+  roomCategories: initialRoomCategories,
+  preselectedRooms,
+  autoAppliedCoupon,
+  maxAdults = 20,
+  maxChildren = 5,
+  maxPets = 5,
+}: BookingFormModalProps) => {
   const { format: formatMoney } = useCurrency();
   const { settings: siteSettings } = useSiteSettings();
   const [roomCategories, setRoomCategories] = useState(initialRoomCategories);
@@ -532,7 +547,8 @@ const BookingFormModal = ({ open, onOpenChange, stayName, stayId, roomCategories
       return `📅 *Trip ${i + 1}:* ${format(r.checkIn, "dd MMM yyyy")} → ${format(r.checkOut, "dd MMM yyyy")} (${rangeNights} nights)`;
     }).join("\n");
 
-    const stayPageUrl = `${window.location.origin}/stay/${stayId}`;
+    const pathSegment = stayPublicSlug?.trim() || stayId;
+    const stayPageUrl = `${window.location.origin}/stay/${encodeURIComponent(pathSegment)}`;
 
     const message = `*New Booking Enquiry*
 

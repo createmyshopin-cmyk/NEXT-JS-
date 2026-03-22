@@ -585,7 +585,7 @@ export default function AdminRoomCategories() {
                         <DropdownMenuItem onClick={() => duplicateRoom(r)}><Copy className="w-3 h-3 mr-2" /> Duplicate</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => {
                           const stayRow = stays.find((s) => s.id === r.stay_id);
-                          if (stayRow) window.open(`/stay/${r.stay_id}`, "_blank");
+                          if (stayRow) window.open(`/stay/${encodeURIComponent(stayRow.stay_id)}`, "_blank");
                         }}>
                           <Eye className="w-3 h-3 mr-2" /> View Stay
                         </DropdownMenuItem>

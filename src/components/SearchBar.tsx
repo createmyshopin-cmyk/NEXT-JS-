@@ -7,6 +7,7 @@ import { useTenant } from "@/context/TenantContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useVoiceSearch } from "@/hooks/useVoiceSearch";
 import { getPlatformTenantId } from "@/lib/platformTenant";
+import { stayPathFromIds } from "@/lib/stayPublicUrl";
 
 const placeholders = [
   "romantic stay with pool...",
@@ -137,7 +138,7 @@ const SearchBar = ({ onPopularClick }: SearchBarProps) => {
 
   const handleResultClick = (stay: SearchResult) => {
     setFocused(false);
-    router.push(`/stay/${stay.id}`);
+    router.push(stayPathFromIds(stay));
   };
 
   const clearSearch = () => {

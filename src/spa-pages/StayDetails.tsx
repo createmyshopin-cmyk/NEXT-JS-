@@ -24,6 +24,7 @@ import { getOgImageUrl } from "@/lib/ogImage";
 import { useBranding } from "@/context/BrandingContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { looksLikeStayUuid, stayPublicAbsoluteUrl, stayPublicPath } from "@/lib/stayPublicUrl";
 
 const amenityIcons: Record<string, React.ElementType> = {
   "Free Wi-Fi": Wifi, "Wi-Fi": Wifi, "Swimming Pool": Waves, "Pool": Waves, "Shared Pool": Waves,
@@ -84,6 +85,14 @@ const StayDetails = () => {
   const { stay, roomCategories, reviews, reels, nearbyDestinations, loading } = useStayDetail(id);
   const liked = stay ? isWishlisted(stay.id) : false;
 
+  useEffect(() => {
+    if (!stay || !id) return;
+    const decoded = decodeURIComponent(id);
+    if (looksLikeStayUuid(decoded) && stay.stayId?.trim() && decoded === stay.id) {
+      router.replace(stayPublicPath(stay));
+    }
+  }, [stay, id, router]);
+
   // Real-time calendar pricing — admin changes reflect instantly via Supabase Realtime
   const allRoomCategoryIds = useMemo(() => roomCategories.map((r) => r.id), [roomCategories]);
   const { getPriceForDate: getDbPrice, getOriginalPriceForDate: getDbOriginalPrice } = useCalendarPricing(stay?.id ?? "", allRoomCategoryIds);
@@ -113,7 +122,8 @@ const StayDetails = () => {
           ogDescription: seoDescription,
           ogImage,
           ogType: "place",
-          canonicalUrl: typeof window !== "undefined" ? `${window.location.origin}/stay/${stay.id}` : undefined,
+          canonicalUrl:
+            typeof window !== "undefined" ? stayPublicAbsoluteUrl(window.location.origin, stay) : undefined,
         }
       : {}
   );
@@ -141,7 +151,7 @@ const StayDetails = () => {
           })),
         }),
         ...(stay.price > 0 && { priceRange: format(stay.price) }),
-        url: typeof window !== "undefined" ? `${window.location.origin}/stay/${stay.id}` : undefined,
+        url: typeof window !== "undefined" ? stayPublicAbsoluteUrl(window.location.origin, stay) : undefined,
       }
     : null;
 
@@ -151,7 +161,12 @@ const StayDetails = () => {
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Home", item: typeof window !== "undefined" ? window.location.origin : "/" },
-          { "@type": "ListItem", position: 2, name: stay.name, item: typeof window !== "undefined" ? `${window.location.origin}/stay/${stay.id}` : undefined },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: stay.name,
+            item: typeof window !== "undefined" ? stayPublicAbsoluteUrl(window.location.origin, stay) : undefined,
+          },
         ],
       }
     : null;
@@ -346,7 +361,24 @@ const couponDiscount = bestCoupon ? bestCoupon.discount : 0;
               <button onClick={() => toggleWishlist(stay.id)} className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-soft min-h-[48px] min-w-[48px]">
                 <Heart className={`w-5 h-5 transition-colors ${liked ? "fill-primary text-primary" : "text-foreground"}`} />
               </button>
-              <button className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-soft min-h-[48px] min-w-[48px]">
+              <button
+                type="button"
+                onClick={async () => {
+                  const url = stayPublicAbsoluteUrl(window.location.origin, stay);
+                  try {
+                    if (navigator.share) {
+                      await navigator.share({ title: stay.name, text: stay.name, url });
+                    } else {
+                      await navigator.clipboard.writeText(url);
+                      toast.success("Link copied");
+                    }
+                  } catch {
+                    /* user cancelled share */
+                  }
+                }}
+                className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-soft min-h-[48px] min-w-[48px]"
+                aria-label="Share stay"
+              >
                 <Share2 className="w-5 h-5 text-foreground" />
               </button>
             </div>
@@ -591,6 +623,7 @@ const couponDiscount = bestCoupon ? bestCoupon.discount : 0;
           onOpenChange={setBookingOpen}
           stayName={stay.name}
           stayId={stay.id}
+          stayPublicSlug={stay.stayId}
           roomCategories={roomCategories}
           preselectedRooms={roomSelections}
           autoAppliedCoupon={bestCoupon ? { code: bestCoupon.code, discount: bestCoupon.discount } : null}

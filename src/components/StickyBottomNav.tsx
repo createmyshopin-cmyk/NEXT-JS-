@@ -9,6 +9,7 @@ import { reelsQueryKey, fetchReels } from "@/hooks/useReels";
 import { Badge } from "@/components/ui/badge";
 import { useVoiceSearch } from "@/hooks/useVoiceSearch";
 import { useCurrency } from "@/context/CurrencyContext";
+import { stayPathFromIds } from "@/lib/stayPublicUrl";
 
 const placeholders = [
   "romantic stay with pool...",
@@ -145,8 +146,7 @@ const StickyBottomNav = () => {
     setQuery("");
     setResults([]);
     setHasSearched(false);
-    // Use primary key id so /stay/[id] matches useStayDetail (same as SearchBar). stay_id is the public slug.
-    router.push(`/stay/${stay.id}`);
+    router.push(stayPathFromIds(stay));
   };
 
   const handleNavClick = (tab: string) => {

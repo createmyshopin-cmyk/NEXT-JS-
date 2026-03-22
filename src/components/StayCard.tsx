@@ -3,6 +3,7 @@ import { Star, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import type { Stay } from "@/types/stay";
+import { stayPublicPath } from "@/lib/stayPublicUrl";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCurrency } from "@/context/CurrencyContext";
 
@@ -184,7 +185,7 @@ const StayCard = ({ stay, index }: StayCardProps) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/stay/${stay.id}`);
+              router.push(stayPublicPath(stay));
             }}
             className="bg-primary text-primary-foreground text-xs font-bold px-5 py-2 rounded-md min-h-[36px] active:scale-95 transition-transform"
           >

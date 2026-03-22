@@ -99,8 +99,8 @@ function VerticalReelCard({ reel }: VerticalReelCardProps) {
   );
 
   const handleViewStay = useCallback(() => {
-    router.push(`/stay/${reel.stay_id}`);
-  }, [router, reel.stay_id]);
+    router.push(`/stay/${encodeURIComponent(reel.stay_public_slug)}`);
+  }, [router, reel.stay_public_slug]);
 
   const handleShare = useCallback(
     (e: React.MouseEvent) => {

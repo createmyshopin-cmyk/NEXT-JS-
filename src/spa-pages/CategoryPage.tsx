@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useStays } from "@/hooks/useStays";
 import type { Stay } from "@/types/stay";
+import { stayPublicPath } from "@/lib/stayPublicUrl";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import StickyHeader from "@/components/StickyHeader";
@@ -133,7 +134,7 @@ const ListingCard = ({ stay, index }: { stay: Stay; index: number }) => {
       {/* ── Details section ── */}
       <div
         className="flex-1 p-4 flex flex-col justify-between cursor-pointer"
-        onClick={() => router.push(`/stay/${stay.id}`)}
+        onClick={() => router.push(stayPublicPath(stay))}
       >
         <div>
           {/* Top row: name + badge */}
@@ -197,7 +198,7 @@ const ListingCard = ({ stay, index }: { stay: Stay; index: number }) => {
             <p className="text-[11px] text-muted-foreground">Per night + Taxes</p>
           </div>
           <button
-            onClick={(e) => { e.stopPropagation(); router.push(`/stay/${stay.id}`); }}
+            onClick={(e) => { e.stopPropagation(); router.push(stayPublicPath(stay)); }}
             className="bg-primary text-primary-foreground text-xs font-bold px-6 py-2.5 rounded-full hover:opacity-90 active:scale-95 transition-all"
           >
             EXPLORE

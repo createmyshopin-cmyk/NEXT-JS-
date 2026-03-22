@@ -374,17 +374,17 @@ export default function AdminStays() {
     else { toast({ title: "Stay duplicated", description: `${stay.name} (Copy) created as hidden.` }); fetchStays(); }
   };
 
-  const copyLink = (stayId: string, stayUuid?: string) => {
-    const url = `${window.location.origin}/stay/${stayUuid || stayId}`;
+  const copyLink = (staySlug: string) => {
+    const url = `${window.location.origin}/stay/${encodeURIComponent(staySlug)}`;
     navigator.clipboard.writeText(url).then(() => {
-      setCopiedId(stayId);
+      setCopiedId(staySlug);
       toast({ title: "Link copied!" });
       setTimeout(() => setCopiedId(null), 2000);
     });
   };
 
   const shareStay = (stay: any) => {
-    const url = `${window.location.origin}/stay/${stay.id}`;
+    const url = `${window.location.origin}/stay/${encodeURIComponent(stay.stay_id)}`;
     const text = `Check out ${stay.name}${stay.location ? ` in ${stay.location}` : ""} — starting at ${format(stay.price ?? 0)}/night!\n${url}`;
     if (navigator.share) navigator.share({ text, url });
     else { navigator.clipboard.writeText(text); toast({ title: "Copied to clipboard" }); }
@@ -679,11 +679,11 @@ export default function AdminStays() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-44">
                                 <DropdownMenuItem
-                                  onClick={() => window.open(`/stay/${stay.id}`, "_blank", "noopener,noreferrer")}
+                                  onClick={() => window.open(`/stay/${encodeURIComponent(stay.stay_id)}`, "_blank", "noopener,noreferrer")}
                                 >
                                   <ExternalLink className="w-3.5 h-3.5 mr-2" /> View Page
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => copyLink(stay.stay_id, stay.id)}>
+                                <DropdownMenuItem onClick={() => copyLink(stay.stay_id)}>
                                   {copiedId === stay.stay_id
                                     ? <><Check className="w-3.5 h-3.5 mr-2 text-green-500" /> Copied!</>
                                     : <><Copy className="w-3.5 h-3.5 mr-2" /> Copy Link</>}
@@ -805,7 +805,7 @@ export default function AdminStays() {
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem
-                                onClick={() => window.open(`/stay/${stay.id}`, "_blank", "noopener,noreferrer")}
+                                onClick={() => window.open(`/stay/${encodeURIComponent(stay.stay_id)}`, "_blank", "noopener,noreferrer")}
                               >
                                 <ExternalLink className="w-3.5 h-3.5 mr-2" /> View
                               </DropdownMenuItem>

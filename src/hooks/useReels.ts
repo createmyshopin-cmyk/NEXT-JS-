@@ -3,7 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface ReelWithStay {
   id: string;
+  /** FK to stays.id (UUID) */
   stay_id: string;
+  /** Public slug for /stay/... URLs */
+  stay_public_slug: string;
   title: string;
   thumbnail: string;
   url: string;
@@ -16,7 +19,7 @@ export const reelsQueryKey = ["reels"] as const;
 export async function fetchReels(): Promise<ReelWithStay[]> {
   const { data, error } = await supabase
     .from("stay_reels")
-    .select("id, stay_id, title, thumbnail, url, platform, sort_order, stays!inner(name)")
+    .select("id, stay_id, title, thumbnail, url, platform, sort_order, stays!inner(name, stay_id)")
     .order("sort_order");
 
   if (error) {
@@ -32,6 +35,7 @@ export async function fetchReels(): Promise<ReelWithStay[]> {
   return (data || []).map((r: any) => ({
     id: r.id,
     stay_id: r.stay_id,
+    stay_public_slug: (r.stays?.stay_id as string) || r.stay_id,
     title: r.title || "",
     thumbnail: r.thumbnail || "",
     url: r.url || "",
