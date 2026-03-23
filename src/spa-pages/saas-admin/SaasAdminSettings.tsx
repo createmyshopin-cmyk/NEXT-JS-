@@ -359,6 +359,7 @@ const SaasAdminSettings = () => {
                   dispatchPlatformCurrencyChange(v);
                   try {
                     await upsertPlatformSetting("default_currency", v);
+                    await supabase.from("site_settings").update({ currency: v } as any).not("id", "is", null);
                   } catch (err: unknown) {
                     const message = err instanceof Error ? err.message : String(err);
                     toast({ title: "Could not save currency to database", description: message, variant: "destructive" });
