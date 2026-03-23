@@ -1,4 +1,5 @@
 import { Camera, MessageCircle, Globe, CheckCircle2, Star, Quote, MessageSquare, FileText, CreditCard, Zap, Calendar, AtSign } from "lucide-react";
+import Link from "next/link";
 
 const PlatformLanding = () => {
   return (
@@ -14,9 +15,9 @@ const PlatformLanding = () => {
             <a className="text-sm font-medium tracking-tight text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Integrations</a>
             <a className="text-sm font-medium tracking-tight text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Blog</a>
           </div>
-          <button className="bg-[#dc2626] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:scale-105 transition-transform active:scale-95">
+          <Link href="/create-account" className="inline-block bg-[#dc2626] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:scale-105 transition-transform active:scale-95">
             Schedule a Demo
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -34,12 +35,12 @@ const PlatformLanding = () => {
             TravelVoo helps resorts, homestays, and property owners launch high-converting direct booking websites in minutes. Manage reservations, pricing, and guest communication from one powerful property booking platform — no coding required.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="bg-gradient-to-br from-[#b70011] to-[#dc2626] text-white px-8 py-4 rounded-xl text-lg font-bold shadow-lg hover:shadow-red-500/20 transition-all active:scale-95">
+            <Link href="/create-account" className="inline-block text-center bg-gradient-to-br from-[#b70011] to-[#dc2626] text-white px-8 py-4 rounded-xl text-lg font-bold shadow-lg hover:shadow-red-500/20 transition-all active:scale-95">
               Start Free Trial
-            </button>
-            <button className="bg-[#ece7e1] text-[#1d1b17] px-8 py-4 rounded-xl text-lg font-bold hover:bg-[#e7e2db] transition-all">
+            </Link>
+            <Link href="#features" className="inline-block text-center bg-[#ece7e1] text-[#1d1b17] px-8 py-4 rounded-xl text-lg font-bold hover:bg-[#e7e2db] transition-all">
               View Showcase
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -139,9 +140,9 @@ const PlatformLanding = () => {
               </li>
             </ul>
             <div className="pt-8">
-              <button className="bg-[#1d1b17] text-[#fef9f1] px-8 py-4 rounded-xl font-bold hover:scale-105 transition-all">
+              <Link href="/login" className="inline-block text-center bg-[#1d1b17] text-[#fef9f1] px-8 py-4 rounded-xl font-bold hover:scale-105 transition-all">
                 Explore The Dashboard
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -264,9 +265,9 @@ const PlatformLanding = () => {
                   Instagram integration
                 </li>
               </ul>
-              <button className="w-full py-4 rounded-xl border-2 border-[#1d1b17] text-[#1d1b17] font-bold hover:bg-[#1d1b17] hover:text-[#fef9f1] transition-colors">
+              <Link href="/create-account" className="w-full text-center py-4 rounded-xl border-2 border-[#1d1b17] text-[#1d1b17] font-bold hover:bg-[#1d1b17] hover:text-[#fef9f1] transition-colors block">
                 Get Started
-              </button>
+              </Link>
             </div>
 
             {/* Professional */}
@@ -296,9 +297,9 @@ const PlatformLanding = () => {
                   Advanced Analytics
                 </li>
               </ul>
-              <button className="w-full py-4 rounded-xl bg-gradient-to-br from-[#b70011] to-[#dc2626] text-white font-bold hover:scale-105 transition-all">
+              <Link href="/create-account" className="w-full text-center py-4 rounded-xl bg-gradient-to-br from-[#b70011] to-[#dc2626] text-white font-bold hover:scale-105 transition-all block">
                 Upgrade Now
-              </button>
+              </Link>
             </div>
 
             {/* Enterprise */}
@@ -322,9 +323,9 @@ const PlatformLanding = () => {
                   Dedicated Manager
                 </li>
               </ul>
-              <button className="w-full py-4 rounded-xl border-2 border-[#1d1b17] font-bold text-[#1d1b17] hover:bg-[#1d1b17] hover:text-[#fef9f1] transition-colors">
+              <Link href="/create-account" className="w-full text-center py-4 rounded-xl border-2 border-[#1d1b17] font-bold text-[#1d1b17] hover:bg-[#1d1b17] hover:text-[#fef9f1] transition-colors block">
                 Contact Sales
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -339,9 +340,9 @@ const PlatformLanding = () => {
             <div className="relative z-10">
               <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-[#fef9f1] mb-8">Ready to navigate the <br />future of hospitality?</h2>
               <p className="text-[#fef9f1]/60 text-lg mb-12 max-w-xl mx-auto">Join the premium hosts who are taking back control of their properties and their profits.</p>
-              <button className="bg-[#dc2626] text-white px-12 py-5 rounded-2xl text-xl font-bold hover:scale-110 transition-transform active:scale-95 shadow-[0_0_40px_rgba(220,38,38,0.4)]">
+              <Link href="/create-account" className="inline-block text-center bg-[#dc2626] text-white px-12 py-5 rounded-2xl text-xl font-bold hover:scale-110 transition-transform active:scale-95 shadow-[0_0_40px_rgba(220,38,38,0.4)]">
                 Start Your Free Trial
-              </button>
+              </Link>
               <p className="text-[#fef9f1]/40 mt-6 text-sm">No credit card required. Cancel anytime.</p>
             </div>
           </div>
