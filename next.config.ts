@@ -19,6 +19,14 @@ const nextConfig: NextConfig = {
     return [{ source: "/create-tenant", destination: "/create-account", permanent: true }];
   },
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+    ],
+  },
   eslint: {
     // Vite project predates Next’s default @typescript-eslint strictness; tighten rules incrementally.
     ignoreDuringBuilds: true,

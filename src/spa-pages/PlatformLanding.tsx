@@ -1,5 +1,6 @@
 import { Camera, MessageCircle, Globe, CheckCircle2, Star, Quote, MessageSquare, FileText, CreditCard, Zap, Calendar, AtSign } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const PlatformLanding = () => {
   return (
@@ -15,9 +16,14 @@ const PlatformLanding = () => {
             <a className="text-sm font-medium tracking-tight text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Integrations</a>
             <a className="text-sm font-medium tracking-tight text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Blog</a>
           </div>
-          <Link href="/create-account" className="inline-block bg-[#dc2626] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:scale-105 transition-transform active:scale-95">
+          <a 
+            href="https://wa.me/918848772371?text=hello%2C%20Goutham%20i%20want%20to%20know%20more%20about%20TravelVoo%20Booking%20app"
+            target="_blank"
+            rel="noopener noreferrer" 
+            className="inline-block bg-[#dc2626] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:scale-105 transition-transform active:scale-95"
+          >
             Schedule a Demo
-          </Link>
+          </a>
         </div>
       </nav>
 
@@ -97,10 +103,13 @@ const PlatformLanding = () => {
           <div className="relative group">
             <div className="absolute -inset-4 bg-[#dc2626]/5 rounded-[40px] blur-3xl transition-opacity group-hover:opacity-100 opacity-0"></div>
             <div className="relative bg-[#e7e2db] rounded-[40px] p-4 overflow-hidden shadow-2xl">
-              <img
-                className="w-full h-[500px] object-cover rounded-[32px] shadow-inner"
-                alt="Luxury hotel room interior with modern dashboard mockup overlay"
+              <Image
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPiVq3LOtlPjzmGDNxfHu9XVpOESftsu8jNoRVKU71XRslnifojB-iB0SuG45St6lrRU1KSoXTIbHBAJnec45uppfd8H5LOj_oQX7uxiRdU-OG5xlOVcs0YdT17tyVAABYRPxuHr0g7SXXywGbIb5V6jG8uvc7HBzh7QLW_5NHvzvrXn0odGFIIIoWsRRmyZTl-2L8cdMN38u-95_cst9MZi65Ay_FcRRxa6FZuI-GxyVXUJet06Ic1s26OBf552t7c5GqPSkORBpA"
+                alt="Luxury hotel room interior with modern dashboard mockup overlay"
+                width={1200}
+                height={500}
+                className="w-full h-[500px] object-cover rounded-[32px] shadow-inner"
+                priority
               />
               {/* Floating UI elements */}
               <div className="absolute top-10 right-10 bg-white/70 backdrop-blur-xl p-6 rounded-2xl shadow-xl w-64 border border-white/20">
@@ -161,7 +170,7 @@ const PlatformLanding = () => {
               <p className="text-[#1d1b17] italic text-lg mb-8 relative z-10">"TravelVoo increased our direct bookings by 40% in the first three months. The Instagram integration is a game-changer for luxury villa marketing."</p>
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-12 h-12 rounded-full bg-[#f2ede6] overflow-hidden">
-                  <img className="w-full h-full object-cover" alt="Portrait of a female host smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6iXWFzOhksyBr7i6SyU_Mk70xwFjdTsWCVqco3Lrq-mmgDIaNdKo9C07rYdphwcNiSpDmZW5QnfUvT7gS0JIVvjV3q-eQgcDm2p8t-2fACENInYZJ07vbs1ybXTQLiHbSk2Z_yr5GloY2zjE9QPboTslgp7VVk7Qb5rT5ehaA2YH0HCktf2WHCvhVSqYKe1JrOjb24M0MRP8guGrXInvIrlaR7zFlU-E7vh1IgHrq6VisSrIfgDPLDeUaaRag6mkXhtHQ55yPhr_Q" />
+                  <Image width={96} height={96} className="w-full h-full object-cover" alt="Portrait of a female host smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6iXWFzOhksyBr7i6SyU_Mk70xwFjdTsWCVqco3Lrq-mmgDIaNdKo9C07rYdphwcNiSpDmZW5QnfUvT7gS0JIVvjV3q-eQgcDm2p8t-2fACENInYZJ07vbs1ybXTQLiHbSk2Z_yr5GloY2zjE9QPboTslgp7VVk7Qb5rT5ehaA2YH0HCktf2WHCvhVSqYKe1JrOjb24M0MRP8guGrXInvIrlaR7zFlU-E7vh1IgHrq6VisSrIfgDPLDeUaaRag6mkXhtHQ55yPhr_Q" />
                 </div>
                 <div>
                   <p className="font-bold text-[#1d1b17]">Elena Rodriguez</p>
@@ -175,7 +184,7 @@ const PlatformLanding = () => {
               <p className="text-[#1d1b17] italic text-lg mb-8 relative z-10">"The hospitality OS we've been waiting for. It feels like an editorial experience, not a database. Our guests love the checkout flow."</p>
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-12 h-12 rounded-full bg-[#f2ede6] overflow-hidden">
-                  <img className="w-full h-full object-cover" alt="Portrait of a male business owner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDULqOlzwfhGOkzVJJeIBrO58LyE9UIrBYxV18GVAwESrbvHQ1eVTzcZMult227NvVOQWjkyv3Y9fqIP8TGyXu9UsBSRCfjLI00fYIglbpbwr9zQqWhpYWU0PzDL5rKfFtZKDQEFUxNXc_IlZV8Hmjr4QjTHZhV0RqDDHLrWkhQhzoM0pBJqkPflOm1HyqCns1tHaSiCXG-tzn3gP06adljsuEDxDSGDqe5yb-BXBf6MpyZ5HtBcZu0QUVVQEVBoQrvJtaiRcBQlVDJ" />
+                  <Image width={96} height={96} className="w-full h-full object-cover" alt="Portrait of a male business owner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDULqOlzwfhGOkzVJJeIBrO58LyE9UIrBYxV18GVAwESrbvHQ1eVTzcZMult227NvVOQWjkyv3Y9fqIP8TGyXu9UsBSRCfjLI00fYIglbpbwr9zQqWhpYWU0PzDL5rKfFtZKDQEFUxNXc_IlZV8Hmjr4QjTHZhV0RqDDHLrWkhQhzoM0pBJqkPflOm1HyqCns1tHaSiCXG-tzn3gP06adljsuEDxDSGDqe5yb-BXBf6MpyZ5HtBcZu0QUVVQEVBoQrvJtaiRcBQlVDJ" />
                 </div>
                 <div>
                   <p className="font-bold text-[#1d1b17]">Marcus Thorne</p>
@@ -189,7 +198,7 @@ const PlatformLanding = () => {
               <p className="text-[#1d1b17] italic text-lg mb-8 relative z-10">"We moved away from legacy PMS systems and haven't looked back. TravelVoo is sleek, fast, and remarkably intuitive."</p>
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-12 h-12 rounded-full bg-[#f2ede6] overflow-hidden">
-                  <img className="w-full h-full object-cover" alt="Portrait of a female executive" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXPKYyi9j82rojRcBbW4YYFQyhBw9QwnHuOYr9BobY5X34zm2iqZhFCCfnoNYy-YxQQslXHda02VANelK-3eEevCkvvMgjRYzmutE47SoiJttEJikTZxjp0rIE91flX0T2ZCBQotft33wmJ8fgYRNB-aaz3CliGII3ygEf7RTuvqvzpagWvWTZYYzNTMrbixPQhPtrVq3fCxKPubl2rZ7lcShm1t98-tamb82UB-fGqGnPjKiCXn2K5Py6B2Mh2LFCyM98Qy1yx8tO" />
+                  <Image width={96} height={96} className="w-full h-full object-cover" alt="Portrait of a female executive" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXPKYyi9j82rojRcBbW4YYFQyhBw9QwnHuOYr9BobY5X34zm2iqZhFCCfnoNYy-YxQQslXHda02VANelK-3eEevCkvvMgjRYzmutE47SoiJttEJikTZxjp0rIE91flX0T2ZCBQotft33wmJ8fgYRNB-aaz3CliGII3ygEf7RTuvqvzpagWvWTZYYzNTMrbixPQhPtrVq3fCxKPubl2rZ7lcShm1t98-tamb82UB-fGqGnPjKiCXn2K5Py6B2Mh2LFCyM98Qy1yx8tO" />
                 </div>
                 <div>
                   <p className="font-bold text-[#1d1b17]">Sarah Jenkins</p>
