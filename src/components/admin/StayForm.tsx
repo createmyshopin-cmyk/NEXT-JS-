@@ -1280,9 +1280,13 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
                   {savingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 </Button>
               )}
-              {isLastTab ? (
+              {stay ? (
                 <Button type="submit" disabled={loading || savingDraft} className="flex-1">
-                  {loading ? "Saving..." : stay ? "Update Stay" : "Create Stay"}
+                  {loading ? "Saving..." : "SAVE changes"}
+                </Button>
+              ) : isLastTab ? (
+                <Button type="submit" disabled={loading || savingDraft} className="flex-1">
+                  {loading ? "Saving..." : "Create Stay"}
                 </Button>
               ) : (
                 <Button type="button" onClick={handleNext} disabled={loading} className="flex-1">
