@@ -532,15 +532,15 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Minimum Adults</label>
-                    <Input type="number" min={1} max={100} value={form.max_adults} onChange={(e) => setForm({ ...form, max_adults: Number(e.target.value) })} />
+                    <Input type="number" min={1} max={100} value={form.max_adults || ""} placeholder="0" onChange={(e) => setForm({ ...form, max_adults: Number(e.target.value) })} />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Minimum Children</label>
-                    <Input type="number" min={0} max={50} value={form.max_children} onChange={(e) => setForm({ ...form, max_children: Number(e.target.value) })} />
+                    <Input type="number" min={0} max={50} value={form.max_children || ""} placeholder="0" onChange={(e) => setForm({ ...form, max_children: Number(e.target.value) })} />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Minimum Pets</label>
-                    <Input type="number" min={0} max={20} value={form.max_pets} onChange={(e) => setForm({ ...form, max_pets: Number(e.target.value) })} />
+                    <Input type="number" min={0} max={20} value={form.max_pets || ""} placeholder="0" onChange={(e) => setForm({ ...form, max_pets: Number(e.target.value) })} />
                   </div>
                 </div>
               </div>
@@ -815,7 +815,8 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
                       <label className="text-xs font-medium">Max Guests</label>
                       <Input
                         type="number"
-                        value={roomForm.max_guests}
+                        value={roomForm.max_guests || ""}
+                        placeholder="0"
                         onChange={e => setRoomForm({ ...roomForm, max_guests: Number(e.target.value) })}
                         className="mt-1 h-8 text-sm"
                         min={1}
@@ -826,7 +827,8 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
                       <label className="text-xs font-medium">Available Rooms</label>
                       <Input
                         type="number"
-                        value={roomForm.available}
+                        value={roomForm.available || ""}
+                        placeholder="0"
                         onChange={e => setRoomForm({ ...roomForm, available: Number(e.target.value) })}
                         className="mt-1 h-8 text-sm"
                         min={0}
