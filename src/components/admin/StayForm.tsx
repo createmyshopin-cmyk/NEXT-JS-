@@ -1272,7 +1272,7 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
           </Tabs>
 
           {/* Footer buttons */}
-          <div className="px-6 py-4 border-t bg-muted/30 space-y-2">
+          <div className="sticky bottom-0 z-20 px-6 py-4 border-t bg-background space-y-2">
             {/* Step indicator */}
             <div className="flex items-center justify-center gap-1 mb-1">
               {TAB_ORDER.map((tab, i) => (
