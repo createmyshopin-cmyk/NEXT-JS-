@@ -27,6 +27,7 @@ import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/context/CurrencyContext";
 import { stayPublicPath, stayPublicAbsoluteUrl } from "@/lib/stayPublicUrl";
+import { useSearchParams, useRouter } from "next/navigation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -118,8 +119,18 @@ export default function AdminStays() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [bookingCounts, setBookingCounts] = useState<BookingCount>({});
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [categoryCount, setCategoryCount] = useState(0);
+
+  useEffect(() => {
+    if (searchParams?.get("new") === "1") {
+      setEditStay(null);
+      setFormOpen(true);
+      router.replace("/admin/stays", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const fetchStays = useCallback(async () => {
     const { data: tenantId } = await supabase.rpc("get_my_tenant_id");

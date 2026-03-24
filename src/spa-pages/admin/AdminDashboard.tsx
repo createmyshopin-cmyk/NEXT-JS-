@@ -144,7 +144,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
+        <Button onClick={() => router.push("/admin/stays?new=1")}>
+          ADD STAY
+        </Button>
+      </div>
 
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="flex flex-wrap h-auto gap-1">
