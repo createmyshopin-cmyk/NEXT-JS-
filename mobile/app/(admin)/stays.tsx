@@ -2102,7 +2102,7 @@ export default function StaysScreen() {
       ) : (
         <FlashList
           data={stays}
-          estimatedItemSize={200}
+          {...({ estimatedItemSize: 200 } as any)}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           ListHeaderComponent={
@@ -2161,7 +2161,7 @@ export default function StaysScreen() {
               </TouchableOpacity>
                 </View>
           }
-          renderItem={({ item: s }) => (
+          renderItem={({ item: s }: { item: Stay }) => (
             <StayCard
               stay={s}
               isDark={isDark}

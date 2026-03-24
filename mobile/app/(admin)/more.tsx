@@ -15,7 +15,7 @@ interface MenuItem {
   description: string;
 }
 
-const MENU_SECTIONS = [
+const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
   {
     title: "Management",
     items: [

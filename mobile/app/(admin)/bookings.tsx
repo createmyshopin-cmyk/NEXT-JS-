@@ -494,7 +494,7 @@ export default function BookingsScreen() {
       ) : (
         <FlashList
           data={filtered}
-          estimatedItemSize={160}
+          {...({ estimatedItemSize: 160 } as any)}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
@@ -510,7 +510,7 @@ export default function BookingsScreen() {
               <Text style={{ color: subColor, marginTop: 12, fontSize: 14 }}>No bookings found</Text>
             </View>
           }
-          renderItem={({ item: b }) => {
+          renderItem={({ item: b }: { item: Booking }) => {
             const isCompleted = b.status === "checked_out" || b.status === "cancelled";
             const badgeColors = STATUS_BADGE_COLORS[b.status] || STATUS_BADGE_COLORS.pending;
             const stayInfo = stayMap[b.stay_id ?? ""];

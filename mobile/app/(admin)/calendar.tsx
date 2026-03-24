@@ -270,7 +270,7 @@ export default function CalendarScreen() {
                 dayTextAtIndex0: { color: isDark ? "#6b7280" : "#9ca3af" },
                 dayTextAtIndex6: { color: isDark ? "#6b7280" : "#9ca3af" },
               },
-            }}
+            } as any}
           />
         </View>
 

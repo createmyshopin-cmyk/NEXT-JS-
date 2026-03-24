@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Building2, Mail, Lock, Check, X, MessageCircle, Loader2 } from "lucide-react";
+import { Building2, Mail, Lock, Check, X, MessageCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { redirectTenantAdminDashboard } from "@/lib/redirectTenantAdminDashboard";
 
 const slugifySubdomain = (s: string) =>
@@ -25,6 +25,8 @@ const CreateTenantSignup = () => {
   const [subdomainSuffix, setSubdomainSuffix] = useState(".travelvoo.in");
   const [subdomainStatus, setSubdomainStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const checkingRef = useRef<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   // Guard: /create-account must only be accessible on the root/main domain.
@@ -350,14 +352,22 @@ const CreateTenantSignup = () => {
               <div className="relative mt-1">
                 <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="pl-9"
+                  className="pl-9 pr-10"
                   placeholder="Min 6 characters"
                   minLength={6}
                   required
                 />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground focus:text-foreground focus:outline-none transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
@@ -366,13 +376,21 @@ const CreateTenantSignup = () => {
               <div className="relative mt-1">
                 <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   value={form.confirmPassword}
                   onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                  className="pl-9"
+                  className="pl-9 pr-10"
                   placeholder="Repeat password"
                   required
                 />
+                <button
+                  type="button"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground focus:text-foreground focus:outline-none transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 

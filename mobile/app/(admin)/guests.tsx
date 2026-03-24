@@ -91,10 +91,10 @@ export default function GuestsScreen() {
       ) : (
         <FlashList
           data={filtered}
-          estimatedItemSize={90}
+          {...({ estimatedItemSize: 90 } as any)}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           ListEmptyComponent={<View className="py-16 items-center"><Text className="text-gray-400">No guests found</Text></View>}
-          renderItem={({ item: g }) => (
+          renderItem={({ item: g }: { item: any }) => (
             <View className="bg-white mx-4 mt-3 rounded-2xl p-4 shadow-sm">
               <View className="flex-row justify-between items-start">
                 <View className="flex-1">

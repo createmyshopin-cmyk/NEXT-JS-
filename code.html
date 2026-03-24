@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TravelVoo | The Modern Navigator for Luxury Rentals</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary-fixed": "#141b2b",
+              "surface-container-highest": "#e7e2db",
+              "on-surface": "#1d1b17",
+              "surface-container-lowest": "#ffffff",
+              "on-tertiary-fixed": "#151c27",
+              "tertiary-fixed": "#dce2f3",
+              "surface-container": "#f2ede6",
+              "surface": "#fef9f1",
+              "secondary-fixed": "#dce2f7",
+              "secondary-container": "#d9dff5",
+              "on-secondary-fixed-variant": "#404758",
+              "tertiary-fixed-dim": "#c0c7d6",
+              "on-primary": "#ffffff",
+              "outline": "#916f6b",
+              "primary-fixed-dim": "#ffb4ab",
+              "surface-container-high": "#ece7e1",
+              "secondary-fixed-dim": "#c0c6db",
+              "on-surface-variant": "#5c403c",
+              "surface-bright": "#fef9f1",
+              "surface-tint": "#bf0715",
+              "tertiary": "#535a67",
+              "surface-dim": "#ded9d3",
+              "on-secondary-container": "#5c6274",
+              "on-secondary": "#ffffff",
+              "on-primary-container": "#fff6f5",
+              "error": "#ba1a1a",
+              "on-primary-fixed-variant": "#93000b",
+              "on-tertiary": "#ffffff",
+              "tertiary-container": "#6b7280",
+              "surface-variant": "#e7e2db",
+              "inverse-on-surface": "#f5f0e9",
+              "on-error": "#ffffff",
+              "background": "#fef9f1",
+              "outline-variant": "#e6bdb8",
+              "primary-container": "#dc2626",
+              "on-error-container": "#93000a",
+              "primary-fixed": "#ffdad6",
+              "on-tertiary-fixed-variant": "#404754",
+              "primary": "#b70011",
+              "on-tertiary-container": "#f7f7ff",
+              "error-container": "#ffdad6",
+              "secondary": "#575e70",
+              "inverse-primary": "#ffb4ab",
+              "on-background": "#1d1b17",
+              "surface-container-low": "#f8f3ec",
+              "inverse-surface": "#32302c",
+              "on-primary-fixed": "#410002"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Plus Jakarta Sans"],
+              "label": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-transition {
+            background: linear-gradient(to bottom, transparent, var(--tw-bg-opacity, 1) #E5E0D8);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #b70011 0%, #dc2626 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 bg-[#F3EEE7]/80 dark:bg-stone-900/80 backdrop-blur-xl shadow-[0_20px_40px_rgba(29,27,23,0.06)]">
+<div class="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
+<div class="text-2xl font-bold tracking-tighter text-stone-900 dark:text-stone-50">TravelVoo</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-tight text-[#DC2626] dark:text-[#EF4444] border-b-2 border-[#DC2626] pb-1" href="#">Features</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-tight text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Solutions</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-tight text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Pricing</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-tight text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Integrations</a>
+<a class="font-['Plus_Jakarta_Sans'] text-sm font-medium tracking-tight text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Blog</a>
+</div>
+<button class="bg-primary-container text-on-primary px-6 py-2.5 rounded-xl text-sm font-semibold hover:scale-105 transition-transform active:scale-95">
+                Schedule a Demo
+            </button>
+</div>
+</nav>
+<!-- Hero Section -->
+<section class="relative pt-32 pb-20 px-6 overflow-hidden">
+<div class="max-w-4xl mx-auto text-center relative z-10">
+<span class="inline-block px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant text-xs font-bold tracking-widest uppercase mb-8">
+                Hospitality Automation Platform
+            </span>
+<h1 class="text-5xl md:text-7xl font-bold tracking-tighter text-on-surface mb-8 leading-[0.95]">
+                Your Properties.<br/>
+<span class="text-primary-container">Your Rules.</span> Your Prices.
+            </h1>
+<p class="text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto mb-12 font-medium">
+                The modern operating system for luxury rentals and boutique hotels. Direct bookings, unified management, and seamless guest experiences.
+            </p>
+<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+<button class="primary-gradient text-on-primary px-8 py-4 rounded-xl text-lg font-bold shadow-lg hover:shadow-primary-container/20 transition-all active:scale-95">
+                    Start Free Trial
+                </button>
+<button class="bg-surface-container-high text-on-surface px-8 py-4 rounded-xl text-lg font-bold hover:bg-surface-container-highest transition-all">
+                    View Showcase
+                </button>
+</div>
+</div>
+<!-- Abstract Background Elements -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none opacity-40">
+<div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-fixed-dim blur-[120px] rounded-full"></div>
+<div class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-secondary-fixed-dim blur-[140px] rounded-full"></div>
+</div>
+</section>
+<!-- Feature Intro -->
+<section class="px-6 py-24">
+<div class="max-w-7xl mx-auto bg-surface-container-lowest rounded-[48px] p-8 md:p-20 shadow-[0_40px_80px_rgba(29,27,23,0.04)]">
+<div class="max-w-3xl mb-16">
+<h2 class="text-4xl md:text-5xl font-bold tracking-tight text-on-surface mb-6">
+                    Bookable Anywhere. <br/>Managed Everywhere.
+                </h2>
+<p class="text-on-surface-variant text-lg leading-relaxed">
+                    Stop juggling tabs. TravelVoo centralizes your distribution while giving you the freedom to sell where your guests are.
+                </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Card 1 -->
+<div class="group p-8 rounded-[32px] bg-surface-container hover:bg-surface-container-high transition-all duration-500">
+<div class="w-14 h-14 bg-surface-container-lowest rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary-container text-3xl">photo_camera</span>
+</div>
+<h3 class="text-xl font-bold mb-4">Instagram Booking</h3>
+<p class="text-on-surface-variant">Turn your aesthetic feed into a direct sales channel. Link stories and posts directly to checkout.</p>
+</div>
+<!-- Card 2 -->
+<div class="group p-8 rounded-[32px] bg-surface-container hover:bg-surface-container-high transition-all duration-500">
+<div class="w-14 h-14 bg-surface-container-lowest rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary-container text-3xl">chat</span>
+</div>
+<h3 class="text-xl font-bold mb-4">WhatsApp Reservations</h3>
+<p class="text-on-surface-variant">Automated booking bots for WhatsApp. Close luxury leads in seconds without human intervention.</p>
+</div>
+<!-- Card 3 -->
+<div class="group p-8 rounded-[32px] bg-surface-container hover:bg-surface-container-high transition-all duration-500">
+<div class="w-14 h-14 bg-surface-container-lowest rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary-container text-3xl">language</span>
+</div>
+<h3 class="text-xl font-bold mb-4">Website Booking Engine</h3>
+<p class="text-on-surface-variant">A lightning-fast, conversion-optimized checkout for your existing brand website.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Product Story: Unified Access -->
+<section class="py-24 px-6 overflow-hidden">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+<div class="relative group">
+<div class="absolute -inset-4 bg-primary-container/5 rounded-[40px] blur-3xl transition-opacity group-hover:opacity-100 opacity-0"></div>
+<div class="relative bg-surface-container-highest rounded-[40px] p-4 overflow-hidden shadow-2xl">
+<img class="w-full h-[500px] object-cover rounded-[32px] shadow-inner" data-alt="Luxury hotel room interior with modern dashboard mockup overlay" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPiVq3LOtlPjzmGDNxfHu9XVpOESftsu8jNoRVKU71XRslnifojB-iB0SuG45St6lrRU1KSoXTIbHBAJnec45uppfd8H5LOj_oQX7uxiRdU-OG5xlOVcs0YdT17tyVAABYRPxuHr0g7SXXywGbIb5V6jG8uvc7HBzh7QLW_5NHvzvrXn0odGFIIIoWsRRmyZTl-2L8cdMN38u-95_cst9MZi65Ay_FcRRxa6FZuI-GxyVXUJet06Ic1s26OBf552t7c5GqPSkORBpA"/>
+<!-- Floating UI elements -->
+<div class="absolute top-10 right-10 glass-card p-6 rounded-2xl shadow-xl w-64 border border-white/20">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">New Booking</p>
+<p class="text-sm font-bold">$2,450.00</p>
+</div>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-3/4"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-8">
+<span class="text-primary-container font-bold tracking-widest uppercase text-xs">Unified Access</span>
+<h2 class="text-5xl font-bold tracking-tighter leading-tight">One Link = <br/>All Your Properties</h2>
+<p class="text-on-surface-variant text-xl leading-relaxed">
+                    Create a bespoke digital concierge for your entire portfolio. Guests can browse, compare, and book any of your luxury listings through a single, white-labeled interface.
+                </p>
+<ul class="space-y-4">
+<li class="flex items-center gap-4 text-on-surface font-semibold">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">stars</span>
+                        Unified Inventory Sync
+                    </li>
+<li class="flex items-center gap-4 text-on-surface font-semibold">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">stars</span>
+                        Dynamic Pricing Control
+                    </li>
+<li class="flex items-center gap-4 text-on-surface font-semibold">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">stars</span>
+                        Multi-language Support
+                    </li>
+</ul>
+<div class="pt-8">
+<button class="bg-on-surface text-surface px-8 py-4 rounded-xl font-bold hover:scale-105 transition-all">
+                        Explore The Dashboard
+                    </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Testimonials -->
+<section class="py-24 px-6 bg-surface-container-low">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-bold tracking-tight mb-4">Loved by Premium Hosts</h2>
+<p class="text-on-surface-variant">Managing over 12,000 keys across 45 countries.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-surface-container-lowest p-10 rounded-[32px] shadow-sm relative">
+<span class="material-symbols-outlined text-primary-fixed-dim text-6xl absolute top-6 right-8 opacity-40">format_quote</span>
+<p class="text-on-surface italic text-lg mb-8 relative z-10">"TravelVoo increased our direct bookings by 40% in the first three months. The Instagram integration is a game-changer for luxury villa marketing."</p>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a female host smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6iXWFzOhksyBr7i6SyU_Mk70xwFjdTsWCVqco3Lrq-mmgDIaNdKo9C07rYdphwcNiSpDmZW5QnfUvT7gS0JIVvjV3q-eQgcDm2p8t-2fACENInYZJ07vbs1ybXTQLiHbSk2Z_yr5GloY2zjE9QPboTslgp7VVk7Qb5rT5ehaA2YH0HCktf2WHCvhVSqYKe1JrOjb24M0MRP8guGrXInvIrlaR7zFlU-E7vh1IgHrq6VisSrIfgDPLDeUaaRag6mkXhtHQ55yPhr_Q"/>
+</div>
+<div>
+<p class="font-bold">Elena Rodriguez</p>
+<p class="text-xs text-on-surface-variant uppercase tracking-widest">Villa Bloom Bali</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-10 rounded-[32px] shadow-sm relative border-2 border-primary-container/10">
+<span class="material-symbols-outlined text-primary-fixed-dim text-6xl absolute top-6 right-8 opacity-40">format_quote</span>
+<p class="text-on-surface italic text-lg mb-8 relative z-10">"The hospitality OS we've been waiting for. It feels like an editorial experience, not a database. Our guests love the checkout flow."</p>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a male business owner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDULqOlzwfhGOkzVJJeIBrO58LyE9UIrBYxV18GVAwESrbvHQ1eVTzcZMult227NvVOQWjkyv3Y9fqIP8TGyXu9UsBSRCfjLI00fYIglbpbwr9zQqWhpYWU0PzDL5rKfFtZKDQEFUxNXc_IlZV8Hmjr4QjTHZhV0RqDDHLrWkhQhzoM0pBJqkPflOm1HyqCns1tHaSiCXG-tzn3gP06adljsuEDxDSGDqe5yb-BXBf6MpyZ5HtBcZu0QUVVQEVBoQrvJtaiRcBQlVDJ"/>
+</div>
+<div>
+<p class="font-bold">Marcus Thorne</p>
+<p class="text-xs text-on-surface-variant uppercase tracking-widest">Thorne Boutique Hotels</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-10 rounded-[32px] shadow-sm relative">
+<span class="material-symbols-outlined text-primary-fixed-dim text-6xl absolute top-6 right-8 opacity-40">format_quote</span>
+<p class="text-on-surface italic text-lg mb-8 relative z-10">"We moved away from legacy PMS systems and haven't looked back. TravelVoo is sleek, fast, and remarkably intuitive."</p>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a female executive" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXPKYyi9j82rojRcBbW4YYFQyhBw9QwnHuOYr9BobY5X34zm2iqZhFCCfnoNYy-YxQQslXHda02VANelK-3eEevCkvvMgjRYzmutE47SoiJttEJikTZxjp0rIE91flX0T2ZCBQotft33wmJ8fgYRNB-aaz3CliGII3ygEf7RTuvqvzpagWvWTZYYzNTMrbixPQhPtrVq3fCxKPubl2rZ7lcShm1t98-tamb82UB-fGqGnPjKiCXn2K5Py6B2Mh2LFCyM98Qy1yx8tO"/>
+</div>
+<div>
+<p class="font-bold">Sarah Jenkins</p>
+<p class="text-xs text-on-surface-variant uppercase tracking-widest">Urban Lofts Group</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Integrations Orbit -->
+<section class="py-24 px-6 relative overflow-hidden">
+<div class="max-w-7xl mx-auto text-center mb-20">
+<h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-6">Works with Everything</h2>
+<p class="text-on-surface-variant max-w-xl mx-auto">TravelVoo connects to the tools you already use. No migration headaches, just pure connectivity.</p>
+</div>
+<div class="relative flex justify-center items-center h-[500px]">
+<!-- Orbit Circles -->
+<div class="absolute w-[300px] h-[300px] border border-outline-variant/30 rounded-full"></div>
+<div class="absolute w-[500px] h-[500px] border border-outline-variant/20 rounded-full"></div>
+<!-- Central Node -->
+<div class="z-20 w-32 h-32 bg-primary-container rounded-[32px] flex items-center justify-center shadow-2xl shadow-primary-container/20">
+<span class="text-white font-bold text-2xl tracking-tighter">TV</span>
+</div>
+<!-- Floating Icons (Simulated positions) -->
+<div class="absolute top-[10%] left-[30%] bg-surface-container-lowest p-4 rounded-2xl shadow-lg flex items-center justify-center w-16 h-16">
+<span class="material-symbols-outlined text-[#25D366]">chat_bubble</span>
+</div>
+<div class="absolute top-[20%] right-[25%] bg-surface-container-lowest p-4 rounded-2xl shadow-lg flex items-center justify-center w-16 h-16">
+<span class="material-symbols-outlined text-[#E4405F]">camera_alt</span>
+</div>
+<div class="absolute bottom-[20%] left-[25%] bg-surface-container-lowest p-4 rounded-2xl shadow-lg flex items-center justify-center w-16 h-16">
+<span class="material-symbols-outlined text-[#21759B]">description</span>
+</div>
+<div class="absolute bottom-[10%] right-[30%] bg-surface-container-lowest p-4 rounded-2xl shadow-lg flex items-center justify-center w-16 h-16">
+<span class="material-symbols-outlined text-[#6772E5]">payments</span>
+</div>
+<div class="absolute top-[50%] left-[10%] bg-surface-container-lowest p-4 rounded-2xl shadow-lg flex items-center justify-center w-16 h-16">
+<span class="material-symbols-outlined text-[#FF4F00]">bolt</span>
+</div>
+<div class="absolute top-[50%] right-[10%] bg-surface-container-lowest p-4 rounded-2xl shadow-lg flex items-center justify-center w-16 h-16">
+<span class="material-symbols-outlined text-[#4285F4]">calendar_today</span>
+</div>
+</div>
+</section>
+<!-- Pricing Section -->
+<section class="py-24 px-6">
+<div class="max-w-7xl mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Starter -->
+<div class="bg-surface-container p-10 rounded-[40px] flex flex-col hover:translate-y-[-8px] transition-transform duration-300">
+<h3 class="text-xl font-bold mb-2">Starter</h3>
+<p class="text-on-surface-variant mb-8">For individual hosts</p>
+<div class="mb-8">
+<span class="text-5xl font-bold">$49</span>
+<span class="text-on-surface-variant">/mo</span>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-sm font-medium">
+<span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+                            Up to 3 properties
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium">
+<span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+                            Direct booking engine
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium">
+<span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+                            Instagram integration
+                        </li>
+</ul>
+<button class="w-full py-4 rounded-xl border-2 border-on-surface font-bold hover:bg-on-surface hover:text-surface transition-colors">
+                        Get Started
+                    </button>
+</div>
+<!-- Professional -->
+<div class="bg-on-surface text-surface p-10 rounded-[40px] flex flex-col relative overflow-hidden hover:translate-y-[-8px] transition-transform duration-300">
+<div class="absolute top-0 right-0 px-6 py-2 bg-primary-container text-white text-xs font-bold uppercase rounded-bl-2xl">Popular</div>
+<h3 class="text-xl font-bold mb-2">Professional</h3>
+<p class="text-surface/60 mb-8">For boutique agencies</p>
+<div class="mb-8">
+<span class="text-5xl font-bold">$129</span>
+<span class="text-surface/60">/mo</span>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-sm font-medium">
+<span class="material-symbols-outlined text-primary-fixed-dim text-lg">check_circle</span>
+                            Up to 20 properties
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium">
+<span class="material-symbols-outlined text-primary-fixed-dim text-lg">check_circle</span>
+                            WhatsApp Automation
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium">
+<span class="material-symbols-outlined text-primary-fixed-dim text-lg">check_circle</span>
+                            Custom domain branding
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium">
+<span class="material-symbols-outlined text-primary-fixed-dim text-lg">check_circle</span>
+                            Advanced Analytics
+                        </li>
+</ul>
+<button class="w-full py-4 rounded-xl primary-gradient text-white font-bold hover:scale-105 transition-all">
+                        Upgrade Now
+                    </button>
+</div>
+<!-- Enterprise -->
+<div class="bg-surface-container p-10 rounded-[40px] flex flex-col hover:translate-y-[-8px] transition-transform duration-300">
+<h3 class="text-xl font-bold mb-2">Enterprise</h3>
+<p class="text-on-surface-variant mb-8">For global operators</p>
+<div class="mb-8">
+<span class="text-5xl font-bold">Custom</span>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-sm font-medium">
+<span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+                            Unlimited properties
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium">
+<span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+                            API Access
+                        </li>
+<li class="flex items-center gap-3 text-sm font-medium">
+<span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+                            Dedicated Manager
+                        </li>
+</ul>
+<button class="w-full py-4 rounded-xl border-2 border-on-surface font-bold hover:bg-on-surface hover:text-surface transition-colors">
+                        Contact Sales
+                    </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-24 px-6">
+<div class="max-w-7xl mx-auto">
+<div class="relative bg-on-surface rounded-[48px] p-12 md:p-24 overflow-hidden text-center">
+<!-- Red Glow Background -->
+<div class="absolute bottom-[-100px] left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary-container/30 blur-[120px] rounded-full"></div>
+<div class="relative z-10">
+<h2 class="text-4xl md:text-6xl font-bold tracking-tighter text-surface mb-8">Ready to navigate the <br/>future of hospitality?</h2>
+<p class="text-surface/60 text-lg mb-12 max-w-xl mx-auto">Join the premium hosts who are taking back control of their properties and their profits.</p>
+<button class="bg-primary-container text-white px-12 py-5 rounded-2xl text-xl font-bold hover:scale-110 transition-transform active:scale-95 shadow-[0_0_40px_rgba(220,38,38,0.4)]">
+                        Start Your Free Trial
+                    </button>
+<p class="text-surface/40 mt-6 text-sm">No credit card required. Cancel anytime.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-stone-100 dark:bg-stone-950 rounded-[24px] m-6">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12 p-12 max-w-7xl mx-auto">
+<div class="space-y-6">
+<div class="text-xl font-bold text-stone-900 dark:text-stone-50">TravelVoo</div>
+<p class="font-['Plus_Jakarta_Sans'] text-stone-500 dark:text-stone-400 max-w-xs">
+                    The Modern Navigator. Redefining property management for the luxury market.
+                </p>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-4">
+<h4 class="font-bold text-stone-900 dark:text-stone-50">Product</h4>
+<div class="flex flex-col gap-2">
+<a class="font-['Plus_Jakarta_Sans'] text-stone-500 hover:text-[#DC2626] hover:underline decoration-2 underline-offset-4 transition-all" href="#">Features</a>
+<a class="font-['Plus_Jakarta_Sans'] text-stone-500 hover:text-[#DC2626] hover:underline decoration-2 underline-offset-4 transition-all" href="#">Solutions</a>
+<a class="font-['Plus_Jakarta_Sans'] text-stone-500 hover:text-[#DC2626] hover:underline decoration-2 underline-offset-4 transition-all" href="#">API</a>
+</div>
+</div>
+<div class="space-y-4">
+<h4 class="font-bold text-stone-900 dark:text-stone-50">Company</h4>
+<div class="flex flex-col gap-2">
+<a class="font-['Plus_Jakarta_Sans'] text-stone-500 hover:text-[#DC2626] hover:underline decoration-2 underline-offset-4 transition-all" href="#">About</a>
+<a class="font-['Plus_Jakarta_Sans'] text-stone-500 hover:text-[#DC2626] hover:underline decoration-2 underline-offset-4 transition-all" href="#">Integrations</a>
+<a class="font-['Plus_Jakarta_Sans'] text-stone-500 hover:text-[#DC2626] hover:underline decoration-2 underline-offset-4 transition-all" href="#">Contact</a>
+</div>
+</div>
+</div>
+<div class="space-y-6 md:text-right">
+<p class="font-['Plus_Jakarta_Sans'] text-stone-500 dark:text-stone-400">© 2024 TravelVoo. The Modern Navigator.</p>
+<div class="flex gap-4 md:justify-end">
+<a class="w-10 h-10 rounded-full bg-stone-200 dark:bg-stone-800 flex items-center justify-center hover:bg-primary-container hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-sm">public</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-stone-200 dark:bg-stone-800 flex items-center justify-center hover:bg-primary-container hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-sm">alternate_email</span>
+</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>
