@@ -103,6 +103,7 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
+  const [initialDataStr, setInitialDataStr] = useState<string>("");
 
   const TAB_ORDER = ["basic", "photos", "rooms", "addons", "reels", "nearby", "reviews", "seo"] as const;
   const tabIdx = TAB_ORDER.indexOf(activeTab as typeof TAB_ORDER[number]);
@@ -161,7 +162,10 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
 
   // Load existing data when editing
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setInitialDataStr("");
+      return;
+    }
     if (stay) {
       setForm({
         name: stay.name || "", location: stay.location || "", description: stay.description || "",
@@ -216,14 +220,32 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
       supabase.from("room_categories").select("*").eq("stay_id", stayId).order("name"),
       (supabase.from("stay_addons") as any).select("*").eq("stay_id", stayId).order("sort_order"),
     ]);
-    if (reelsRes.data) setReels(reelsRes.data.map(r => ({ id: r.id, title: r.title, thumbnail: r.thumbnail, url: r.url, platform: r.platform })));
-    if (nearbyRes.data) setNearby(nearbyRes.data.map(n => ({ id: n.id, name: n.name, image: n.image, distance: n.distance, maps_link: n.maps_link || "", description: n.description || "", tenant_id: n.tenant_id })));
-    if (reviewsRes.data) setReviews(reviewsRes.data.map(r => ({ id: r.id, guest_name: r.guest_name, rating: r.rating, comment: r.comment, photos: r.photos || [] })));
-    if (roomsRes.data) setRoomCategories(roomsRes.data.map(r => ({
-      id: r.id, name: r.name, max_guests: r.max_guests, available: r.available,
-      amenities: r.amenities || [], price: r.price, original_price: r.original_price, images: r.images || [],
-    })));
-    if (addonsRes.data) setAddons(addonsRes.data.map((a: any) => ({ id: a.id, name: a.name, price: a.price, optional: a.optional })));
+    const fetchedReels = reelsRes.data ? reelsRes.data.map((r: any) => ({ id: r.id, title: r.title, thumbnail: r.thumbnail, url: r.url, platform: r.platform })) : [];
+    const fetchedNearby = nearbyRes.data ? nearbyRes.data.map((n: any) => ({ id: n.id, name: n.name, image: n.image, distance: n.distance, maps_link: n.maps_link || "", description: n.description || "", tenant_id: n.tenant_id })) : [];
+    const fetchedReviews = reviewsRes.data ? reviewsRes.data.map((r: any) => ({ id: r.id, guest_name: r.guest_name, rating: r.rating, comment: r.comment, photos: r.photos || [] })) : [];
+    const fetchedRooms = roomsRes.data ? roomsRes.data.map((r: any) => ({ id: r.id, name: r.name, max_guests: r.max_guests, available: r.available, amenities: r.amenities || [], price: r.price, original_price: r.original_price, images: r.images || [] })) : [];
+    const fetchedAddons = addonsRes.data ? addonsRes.data.map((a: any) => ({ id: a.id, name: a.name, price: a.price, optional: a.optional })) : [];
+
+    setReels(fetchedReels);
+    setNearby(fetchedNearby);
+    setReviews(fetchedReviews);
+    setRoomCategories(fetchedRooms);
+    setAddons(fetchedAddons);
+
+    const initialObj = {
+      form: { name: stay.name || "", location: stay.location || "", description: stay.description || "", category: stay.category || "", price: stay.price || 0, original_price: stay.original_price || 0, status: stay.status || "active", max_adults: stay.max_adults ?? 20, max_children: stay.max_children ?? 5, max_pets: stay.max_pets ?? 5 },
+      selectedAmenities: stay.amenities || [],
+      photos: stay.images || [],
+      seo: { seo_title: stay.seo_title || "", seo_description: stay.seo_description || "", seo_keywords: stay.seo_keywords || "", og_image_url: stay.og_image_url || "" },
+      reels: fetchedReels,
+      nearby: fetchedNearby,
+      reviews: fetchedReviews,
+      roomCategories: fetchedRooms,
+      addons: fetchedAddons,
+      deletedRoomIds: [],
+      deletedAddonIds: []
+    };
+    setInitialDataStr(JSON.stringify(initialObj));
   };
 
   const validateBasic = () => {
@@ -458,6 +480,11 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
     }
   };
   const removeReview = (i: number) => setReviews(prev => prev.filter((_, idx) => idx !== i));
+
+  const currentSnapshot = JSON.stringify({
+    form, selectedAmenities, photos, seo, reels, nearby, reviews, roomCategories, addons, deletedRoomIds, deletedAddonIds
+  });
+  const hasChanges = initialDataStr !== "" && currentSnapshot !== initialDataStr;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1280,9 +1307,9 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
                   {savingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 </Button>
               )}
-              {stay ? (
-                <Button type="submit" disabled={loading || savingDraft} className="flex-1">
-                  {loading ? "Saving..." : "SAVE changes"}
+              {stay && hasChanges ? (
+                <Button type="submit" disabled={loading || savingDraft} className="flex-1 bg-[#10b981] hover:bg-[#059669]">
+                  {loading ? "Saving..." : "Save changes"}
                 </Button>
               ) : isLastTab ? (
                 <Button type="submit" disabled={loading || savingDraft} className="flex-1">
