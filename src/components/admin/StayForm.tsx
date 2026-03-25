@@ -486,7 +486,7 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent onInteractOutside={(e) => e.preventDefault()} className="max-w-2xl w-[95vw] h-[95vh] md:h-[85vh] p-0 flex flex-col overflow-hidden">
+      <DialogContent onInteractOutside={(e) => e.preventDefault()} className="max-w-2xl w-[95vw] h-[85dvh] md:h-[85vh] p-0 flex flex-col overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
           <DialogTitle>{stay ? "Edit Stay" : "Add New Stay"}</DialogTitle>
         </DialogHeader>
