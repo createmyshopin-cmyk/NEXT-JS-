@@ -123,43 +123,47 @@ function PreviewHeroSlide({
 function ThemePreviewCanvas({
   preset,
   tokenInputs,
-  banners,
 }: {
-  preset: LandingThemePreset;
+  preset: string;
   tokenInputs: Record<string, string>;
-  banners: HeroBanner[];
 }) {
   const [device, setDevice] = useState<Device>("mobile");
-  const previewTokens = useMemo(() => buildPreviewTokens(tokenInputs), [tokenInputs]);
-  const heroes = useMemo(() => banners.filter((b) => b.is_active), [banners]);
-  const [heroIdx, setHeroIdx] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setHeroIdx(0);
-  }, [heroes.length, preset, tokenInputs]);
+  // Build the full token map including the preset
+  const previewTokens = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(tokenInputs)) {
+      const key = k.startsWith("--") ? k : `--${k}`;
+      const val = v.trim();
+      if (val) out[key] = val;
+    }
+    return out;
+  }, [tokenInputs]);
 
+  // Inject tokens into the iframe via postMessage every time they change
   useEffect(() => {
-    if (heroes.length <= 1) return;
-    const t = setInterval(() => setHeroIdx((i) => (i + 1) % heroes.length), 3500);
-    return () => clearInterval(t);
-  }, [heroes.length]);
+    const send = () => {
+      iframeRef.current?.contentWindow?.postMessage(
+        { type: "THEME_PREVIEW_TOKENS", tokens: previewTokens, preset },
+        "*"
+      );
+    };
+    // Small delay to ensure iframe is ready on first load
+    const tid = setTimeout(send, 200);
+    return () => clearTimeout(tid);
+  }, [previewTokens, preset]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0);
   }, [device]);
 
-  const hero = heroes[heroIdx % Math.max(heroes.length, 1)];
   const dim = DEVICE[device];
-
-  const innerScale = cn(
-    device === "mobile" && "text-[13px] leading-snug",
-    device === "tablet" && "text-sm",
-    device === "desktop" && "text-base"
-  );
 
   return (
     <div className="space-y-3">
+      {/* Device switcher */}
       <div className="flex rounded-lg border bg-muted/40 p-1 gap-1">
         {(Object.keys(DEVICE) as Device[]).map((d) => {
           const Ic = DEVICE[d].icon;
@@ -180,6 +184,7 @@ function ThemePreviewCanvas({
         })}
       </div>
 
+      {/* Device frame */}
       <div className="flex justify-center rounded-xl border bg-gradient-to-b from-muted/60 to-muted/30 p-3 sm:p-6 overflow-x-auto">
         <div
           className="transition-[width] duration-300 ease-out shrink-0"
@@ -192,6 +197,7 @@ function ThemePreviewCanvas({
             )}
             style={{ maxWidth: dim.w }}
           >
+            {/* Device chrome */}
             {device === "mobile" && (
               <div className="h-2 bg-slate-800 flex justify-center pt-1">
                 <div className="w-16 h-1 rounded-full bg-slate-600" />
@@ -212,79 +218,51 @@ function ThemePreviewCanvas({
                 <div className="flex-1 h-5 rounded bg-slate-700/80 mx-4" />
               </div>
             )}
+
+            {/* Live iframe */}
             <div
               ref={scrollRef}
               className={cn(
-                "max-h-[min(70vh,720px)] overflow-y-auto overflow-x-hidden",
+                "overflow-hidden relative",
                 device === "mobile" && "rounded-b-[22px]",
                 device === "tablet" && "rounded-b-[12px]",
                 device === "desktop" && "rounded-b-lg"
               )}
+              style={{ height: "min(70vh, 720px)" }}
             >
-              <LandingThemeScope
-                landingThemeSlug={preset}
-                themeTokens={previewTokens}
-                className={cn("min-h-[380px] md:min-h-[420px]", innerScale)}
-              >
-                <div className="px-3 pt-3 pb-8 space-y-4">
-                  <div className="h-8 rounded-lg bg-muted flex items-center px-2 gap-2">
-                    <div className="h-2 w-16 bg-muted-foreground/25 rounded" />
-                    <div className="flex-1" />
-                    <div className="h-2 w-8 bg-muted-foreground/25 rounded" />
-                  </div>
-
-                  {hero?.image_url ? (
-                    <PreviewHeroSlide
-                      image={hero.image_url}
-                      title={hero.title || "Your headline"}
-                      subtitle={hero.subtitle || ""}
-                      cta={hero.cta_text || "Book now"}
-                    />
-                  ) : (
-                    <div className="relative h-[160px] rounded-xl overflow-hidden bg-muted flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                      <ImageIcon className="h-10 w-10 opacity-40" />
-                      <p className="text-xs px-4 text-center">Add a hero slide below to preview imagery</p>
-                    </div>
-                  )}
-
-                  {heroes.length > 1 && (
-                    <div className="flex justify-center gap-1">
-                      {heroes.map((_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          className={cn("h-1.5 rounded-full transition-all", i === heroIdx ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30")}
-                          onClick={() => setHeroIdx(i)}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="space-y-2 pt-2">
-                    <div className="h-2 w-28 bg-muted rounded" />
-                    <div
-                      className={cn(
-                        "grid gap-2",
-                        device === "desktop" ? "grid-cols-4" : "grid-cols-2"
-                      )}
-                    >
-                      {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="h-24 rounded-xl bg-muted/80 border border-border/50" />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </LandingThemeScope>
+              <iframe
+                ref={iframeRef}
+                src="/"
+                title="Live preview"
+                style={{
+                  width: dim.w + "px",
+                  height: "100%",
+                  border: "none",
+                  transformOrigin: "top left",
+                  // Scale down to fit the container width
+                  transform: `scale(${Math.min(1, 100 / dim.w * (dim.w < 400 ? dim.w : dim.w === 834 ? 834 : 1280) / dim.w)})`,
+                }}
+                onLoad={() => {
+                  // Re-send tokens after iframe navigation/reload
+                  iframeRef.current?.contentWindow?.postMessage(
+                    { type: "THEME_PREVIEW_TOKENS", tokens: previewTokens, preset },
+                    "*"
+                  );
+                }}
+              />
             </div>
           </div>
         </div>
       </div>
+
       <p className="text-[11px] text-center text-muted-foreground">
-        Each device uses a fixed viewport width so you can see how the active theme scales. Save theme above to publish colors.
+        Live preview of your actual landing page. Colors update instantly as you edit above. Save theme to publish.
       </p>
     </div>
   );
 }
+
+
 
 function ImageField({
   value, onChange,
@@ -558,7 +536,7 @@ export function ThemePreviewSection({
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <ThemePreviewCanvas preset={preset} tokenInputs={tokenInputs} banners={banners} />
+          <ThemePreviewCanvas preset={preset} tokenInputs={tokenInputs} />
         )}
       </CardContent>
     </Card>

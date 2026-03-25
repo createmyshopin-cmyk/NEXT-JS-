@@ -139,14 +139,16 @@ export function useSiteSettings(): UseSiteSettingsReturn {
       }
     }
 
-    // Realtime: whenever site_settings row changes (e.g. admin toggles maintenance mode),
-    // bust the cache and re-fetch so the public page updates instantly — no hard reload needed.
+    // Unique channel per mount avoids duplicate subscription conflicts
+    // when the hook is used on multiple components simultaneously.
+    const channelName = `site_settings_watch_${Math.random().toString(36).slice(2)}`;
     const channel = supabase
-      .channel("site_settings_public_watch")
+      .channel(channelName)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "site_settings" },
         () => {
+          // Always bust cache so the fresh DB row (with new tokens) reaches React state.
           clearSiteSettingsCache();
           doFetch();
         }

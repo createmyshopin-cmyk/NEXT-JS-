@@ -3,6 +3,7 @@
 import MaintenanceOverlay from "@/components/MaintenancePage";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { LandingThemeProvider } from "@/components/LandingThemeProvider";
+import { ThemePreviewMessageHandler } from "@/components/ThemePreviewMessageHandler";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const PageLoader = () => (
@@ -18,6 +19,8 @@ export function PublicMaintenanceGate({ children }: { children: React.ReactNode 
 
   return (
     <LandingThemeProvider landingThemeSlug={settings?.landing_theme_slug} themeTokens={settings?.theme_tokens ?? undefined}>
+      {/* Listens for postMessage from the theme editor iframe */}
+      <ThemePreviewMessageHandler />
       {/* Page content — blurred and non-interactive during maintenance */}
       <div
         style={inMaintenance ? {

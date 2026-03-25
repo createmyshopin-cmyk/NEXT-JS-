@@ -55,8 +55,8 @@ const PRESET_TOKEN_HINTS: Partial<Record<LandingThemePreset, Record<string, stri
   },
 };
 
-export function isLandingThemePreset(s: string | null | undefined): s is LandingThemePreset {
-  return s === "default" || s === "ocean" || s === "sunset" || s === "forest" || s === "plannet";
+export function isLandingThemePreset(s: string | null | undefined): s is string {
+  return typeof s === "string" && s.length > 0;
 }
 
 export function normalizeThemeTokens(raw: Json | null | undefined): Record<string, string> {
@@ -64,16 +64,17 @@ export function normalizeThemeTokens(raw: Json | null | undefined): Record<strin
   const out: Record<string, string> = {};
   const allowed = new Set(ALLOWED_LANDING_THEME_VARS);
   for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
-    if (!allowed.has(k as (typeof ALLOWED_LANDING_THEME_VARS)[number])) continue;
-    if (typeof v === "string" && v.length < 200) out[k] = v;
+    const cssKey = k.startsWith("--") ? k : `--${k}`;
+    if (!allowed.has(cssKey as (typeof ALLOWED_LANDING_THEME_VARS)[number])) continue;
+    if (typeof v === "string" && v.length < 200) out[cssKey] = v;
   }
   return out;
 }
 
 export function mergePresetAndDbTokens(
-  preset: LandingThemePreset,
+  preset: string,
   dbTokens: Record<string, string>
 ): Record<string, string> {
-  const hints = PRESET_TOKEN_HINTS[preset] ?? {};
+  const hints = PRESET_TOKEN_HINTS[preset as LandingThemePreset] ?? {};
   return { ...hints, ...dbTokens };
 }

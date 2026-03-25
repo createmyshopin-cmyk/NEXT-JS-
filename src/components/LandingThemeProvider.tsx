@@ -23,7 +23,7 @@ type Props = {
  * Preset adds optional class on <html> for global.css hooks.
  */
 export function LandingThemeProvider({ landingThemeSlug, themeTokens, children }: Props) {
-  const preset: LandingThemePreset = isLandingThemePreset(landingThemeSlug) ? landingThemeSlug : "default";
+  const preset = isLandingThemePreset(landingThemeSlug) ? landingThemeSlug : "default";
   const dbTokens = useMemo(() => normalizeThemeTokens(themeTokens), [themeTokens]);
   const merged = useMemo(() => mergePresetAndDbTokens(preset, dbTokens), [preset, dbTokens]);
 
@@ -36,7 +36,7 @@ export function LandingThemeProvider({ landingThemeSlug, themeTokens, children }
       root.style.setProperty(key, value);
     });
 
-    const cls = LANDING_THEME_PRESET_CLASS[preset];
+    const cls = LANDING_THEME_PRESET_CLASS[preset as LandingThemePreset] || "";
     const presetClasses = [ROOT_CLASS_PREFIX + preset, cls].filter(Boolean);
     presetClasses.forEach((c) => root.classList.add(c));
 
