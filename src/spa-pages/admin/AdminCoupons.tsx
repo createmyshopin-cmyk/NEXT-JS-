@@ -400,7 +400,7 @@ export default function AdminCoupons() {
 
     setSaving(true);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       code: form.code.toUpperCase().trim(),
       description: form.description.trim(),
       type: form.type,
@@ -413,11 +413,22 @@ export default function AdminCoupons() {
       expires_at: form.expires_at ? form.expires_at.toISOString() : null,
     };
 
+    // Resolve tenant_id for new coupons (required NOT NULL column)
+    if (!editCoupon) {
+      const { data: tenantId, error: tidErr } = await supabase.rpc("get_my_tenant_id");
+      if (tidErr || !tenantId) {
+        toast({ title: "Could not resolve tenant", description: tidErr?.message ?? "Please make sure you are logged in.", variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+      payload.tenant_id = tenantId;
+    }
+
     let error;
     if (editCoupon) {
       ({ error } = await supabase.from("coupons").update(payload).eq("id", editCoupon.id));
     } else {
-      ({ error } = await supabase.from("coupons").insert([payload]));
+      ({ error } = await (supabase.from("coupons") as any).insert([payload]));
     }
 
     if (error) {
@@ -430,6 +441,7 @@ export default function AdminCoupons() {
     }
     setSaving(false);
   };
+
 
   const handleDelete = async () => {
     if (!deleteId) return;
