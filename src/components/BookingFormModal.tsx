@@ -180,6 +180,8 @@ const BookingFormModal = ({
         type: "flat",
         value: autoAppliedCoupon.discount,
         label: `${formatMoney(autoAppliedCoupon.discount)} OFF`,
+        max_discount: null,
+        min_purchase: 0,
       });
       setCouponError("");
     }
@@ -599,7 +601,7 @@ ${addOnLines ? `*Add-ons:*\n${addOnLines}\n` : ""}${appliedCoupon ? `🏷 *Coupo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[420px] max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl border-none">
+      <DialogContent className="max-w-[420px] max-h-[90vh] flex flex-col overflow-hidden p-0 gap-0 rounded-2xl border-none">
         {/* Coupon Success Banner */}
         <AnimatePresence>
           {showCouponBanner && appliedCoupon && (
@@ -617,14 +619,14 @@ ${addOnLines ? `*Add-ons:*\n${addOnLines}\n` : ""}${appliedCoupon ? `🏷 *Coupo
           )}
         </AnimatePresence>
 
-        <div className="p-5 pb-0">
+        <div className="p-5 pb-0 shrink-0">
           <DialogHeader className="text-left">
             <DialogTitle className="text-lg font-extrabold text-foreground">Book Your Stay</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">Fill the details to send enquiry.</DialogDescription>
           </DialogHeader>
         </div>
 
-        <div ref={formContainerRef} className="p-5 space-y-4">
+        <div ref={formContainerRef} className="p-5 space-y-4 overflow-y-auto flex-1">
           {/* Name */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">Name</Label>
@@ -1221,6 +1223,8 @@ ${addOnLines ? `*Add-ons:*\n${addOnLines}\n` : ""}${appliedCoupon ? `🏷 *Coupo
             </div>
           )}
 
+        </div>
+        <div className="p-5 pt-3 border-t border-border bg-background shrink-0 mt-auto">
           {/* Submit */}
           <button
             type="button"
