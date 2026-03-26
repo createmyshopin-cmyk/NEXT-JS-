@@ -45,6 +45,7 @@ const StayDetails = () => {
   const id = params.id as string;
   const router = useRouter();
   const [currentImage, setCurrentImage] = useState(0);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const { isWishlisted, toggleWishlist } = useWishlist();
   const [bookingOpen, setBookingOpen] = useState(false);
   
@@ -400,6 +401,17 @@ const couponDiscount = bestCoupon ? bestCoupon.discount : 0;
           <div className="absolute bottom-3 right-4 bg-foreground/60 backdrop-blur-sm text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full z-10">
             {currentImage + 1} / {stay.images.length}
           </div>
+
+          {/* View all photos */}
+          {stay.images.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setGalleryOpen(true)}
+              className="absolute bottom-3 left-4 bg-background/80 backdrop-blur-sm text-foreground text-xs font-semibold px-3 py-1 rounded-full z-10 shadow-soft"
+            >
+              View all photos
+            </button>
+          )}
         </div>
 
         {/* Thumbnail strip */}
@@ -423,6 +435,59 @@ const couponDiscount = bestCoupon ? bestCoupon.discount : 0;
           </div>
         )}
       </div>
+
+      {/* Full gallery overlay */}
+      <AnimatePresence>
+        {galleryOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="max-w-lg mx-auto h-full flex flex-col">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">{stay.name}</p>
+                  <p className="text-xs text-muted-foreground">{stay.images.length} photos</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setGalleryOpen(false)}
+                  className="w-10 h-10 rounded-full bg-muted flex items-center justify-center min-h-[48px] min-w-[48px]"
+                  aria-label="Close gallery"
+                >
+                  <ChevronLeft className="w-5 h-5 text-foreground" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-4 py-4">
+                <div className="grid grid-cols-2 gap-3">
+                  {stay.images.map((img, i) => (
+                    <button
+                      type="button"
+                      key={img + i}
+                      onClick={() => {
+                        goTo(i, stay.images.length);
+                        setGalleryOpen(false);
+                      }}
+                      className="relative overflow-hidden rounded-xl bg-muted aspect-[4/3]"
+                      aria-label={`Open photo ${i + 1}`}
+                    >
+                      <img src={img} alt={`${stay.name} photo ${i + 1}`} className="w-full h-full object-cover" />
+                      <div className="absolute bottom-2 right-2 bg-foreground/60 text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                        {i + 1}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 2. Stay Info */}
       <div className="px-4 pt-5">
