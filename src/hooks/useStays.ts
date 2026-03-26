@@ -220,19 +220,23 @@ export function useStayDetail(stayId: string | undefined) {
           const { data } = await supabase.from("stays").select("*").eq("id", key).maybeSingle();
           stayData = data;
         } else {
-          let dbKey = key;
+          const stayIdCandidates = new Set<string>([key]);
           const match = key.match(/^(\d+)(?:-|$)/);
-          if (match && !key.toLowerCase().startsWith("stay-")) {
-            dbKey = `Stay-${match[1]}`;
+          if (match) {
+            const num = match[1];
+            stayIdCandidates.add(num);
+            stayIdCandidates.add(`stay-${num}`);
+            stayIdCandidates.add(`Stay-${num}`);
           }
-          let q = supabase.from("stays").select("*").eq("stay_id", dbKey);
+
+          let q = supabase.from("stays").select("*").in("stay_id", Array.from(stayIdCandidates));
           if (tenantId) {
             q = q.eq("tenant_id", tenantId);
           } else {
             const pid = await getPlatformTenantId();
             if (pid) q = q.eq("tenant_id", pid);
           }
-          const { data } = await q.maybeSingle();
+          const { data } = await q.limit(1).maybeSingle();
           stayData = data ?? null;
         }
 
