@@ -88,6 +88,7 @@ const ROOM_AMENITIES = [
 const emptyRoom: RoomCategoryItem = {
   name: "", max_guests: 2, available: 1, amenities: [], price: 0, original_price: 0, images: [],
 };
+const MAX_STAY_PHOTOS = 100;
 
 interface StayFormProps {
   open: boolean;
@@ -253,6 +254,18 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
   const saveStay = async (status: string) => {
     const isDraft = status === "draft";
     if (isDraft) setSavingDraft(true); else setLoading(true);
+
+    if (photos.length > MAX_STAY_PHOTOS) {
+      toast({
+        title: "Photo limit reached",
+        description: `A stay can have at most ${MAX_STAY_PHOTOS} photos. Remove extra photos before saving.`,
+        variant: "destructive",
+      });
+      setSavingDraft(false);
+      setLoading(false);
+      setActiveTab("photos");
+      return;
+    }
 
     if (!isDraft && !validateBasic()) {
       setLoading(false);
@@ -661,6 +674,9 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
             {/* PHOTOS TAB */}
             <TabsContent value="photos" className="px-6 pb-2 space-y-4 mt-4">
               <div className="flex flex-col gap-3">
+                <p className="text-xs text-muted-foreground">
+                  {photos.length} / {MAX_STAY_PHOTOS} photos used
+                </p>
                 <label
                   htmlFor="photo-upload"
                   className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-primary/30 rounded-xl p-6 cursor-pointer hover:border-primary/60 hover:bg-primary/5 transition-all"
@@ -691,9 +707,29 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
                     onChange={async (e) => {
                       const files = e.target.files;
                       if (!files || files.length === 0) return;
+                      const remainingSlots = Math.max(0, MAX_STAY_PHOTOS - photos.length);
+                      if (remainingSlots <= 0) {
+                        toast({
+                          title: "Photo limit reached",
+                          description: `You can upload up to ${MAX_STAY_PHOTOS} photos per stay.`,
+                          variant: "destructive",
+                        });
+                        e.target.value = "";
+                        return;
+                      }
+                      const selectedFiles = Array.from(files);
+                      if (selectedFiles.length > remainingSlots) {
+                        toast({
+                          title: "Too many photos selected",
+                          description: `Only ${remainingSlots} more photo${remainingSlots === 1 ? "" : "s"} can be added (max ${MAX_STAY_PHOTOS}).`,
+                          variant: "destructive",
+                        });
+                      }
+                      const filesToUpload = selectedFiles.slice(0, remainingSlots);
+
                       setUploading(true);
                       const newUrls: string[] = [];
-                      for (const rawFile of Array.from(files)) {
+                      for (const rawFile of filesToUpload) {
                         const file = await compressImage(rawFile, "stay");
                         const ext = file.name.split('.').pop();
                         const path = `stays/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -703,7 +739,7 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
                           newUrls.push(urlData.publicUrl);
                         }
                       }
-                      setPhotos(prev => [...prev, ...newUrls]);
+                      setPhotos(prev => [...prev, ...newUrls].slice(0, MAX_STAY_PHOTOS));
                       setUploading(false);
                       e.target.value = '';
                     }}
