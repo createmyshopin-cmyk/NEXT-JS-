@@ -6,12 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Users, Baby, PawPrint, UserCheck, UsersRound, Copy, Check,
   MessageCircle, Phone, FileText, Receipt, CalendarDays,
-  Clock, CheckCircle2, X as XIcon, Tag, Loader2,
+  Clock, CheckCircle2, X as XIcon, Tag, Loader2, Bell
 } from "lucide-react";
 import { format as formatDateFns, differenceInDays, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/context/CurrencyContext";
 import { formatPhoneForWhatsApp } from "@/lib/countryCodes";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface BookingDetailDialogProps {
   open: boolean;
@@ -62,6 +65,32 @@ export function BookingDetailDialog({
 }: BookingDetailDialogProps) {
   const { format } = useCurrency();
   const [copiedId, setCopiedId] = useState(false);
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderTime, setReminderTime] = useState("24");
+  const { toast } = useToast();
+
+  const handleSetReminder = async () => {
+    const hours = parseInt(reminderTime);
+    const scheduledFor = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+    
+    // booking/lead tracking
+    const isLead = packageLead;
+    const { error } = await supabase.from('admin_reminders' as any).insert({
+      tenant_id: booking.tenant_id,
+      booking_id: isLead ? null : booking.id,
+      lead_id: isLead ? booking.id : null,
+      message: `Reminder for ${isLead ? 'Enquiry' : 'Booking'} - ${booking.guest_name}`,
+      scheduled_for: scheduledFor,
+      is_auto: false
+    });
+
+    if (error) {
+      toast({ title: "Failed to set reminder", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Reminder Set", description: `You will be reminded in ${hours} hours.` });
+      setReminderOpen(false);
+    }
+  };
 
   if (!booking) return null;
 
@@ -303,9 +332,35 @@ export function BookingDetailDialog({
           )}
 
           {/* Quick Actions */}
-          {(onCreateQuotation || onCreateInvoice) && (
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              {onCreateQuotation && (
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <Popover open={reminderOpen} onOpenChange={setReminderOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 w-full">
+                  <Bell className="w-3.5 h-3.5" /> Reminder
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-3" align="start">
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold">Set Custom Reminder</p>
+                  <Select value={reminderTime} onValueChange={setReminderTime}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Select time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">In 1 Hour</SelectItem>
+                      <SelectItem value="3">In 3 Hours</SelectItem>
+                      <SelectItem value="24">In 24 Hours</SelectItem>
+                      <SelectItem value="48">In 48 Hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" className="w-full h-8 text-xs" onClick={handleSetReminder}>Save Reminder</Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            {(onCreateQuotation || onCreateInvoice) && (
+              <>
+                {onCreateQuotation && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -334,8 +389,9 @@ export function BookingDetailDialog({
                   <Receipt className="w-3.5 h-3.5" /> Invoice
                 </Button>
               )}
-            </div>
-          )}
+              </>
+            )}
+          </div>
 
           {/* Created */}
           <p className="text-[10px] text-muted-foreground text-center pt-1">

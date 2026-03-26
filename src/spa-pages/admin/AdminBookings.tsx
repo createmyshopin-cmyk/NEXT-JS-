@@ -28,6 +28,17 @@ import { format as formatDate, differenceInDays, isToday, isTomorrow, isPast, pa
 import { cn } from "@/lib/utils";
 import { formatPhoneForWhatsApp } from "@/lib/countryCodes";
 import { useCurrency } from "@/context/CurrencyContext";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { Bell, Settings, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -206,9 +217,52 @@ export default function AdminBookings() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [quickDate, setQuickDate] = useState<string | null>(null);
+  
+  // Reminder Settings state
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [autoEnabled, setAutoEnabled] = useState(true);
+  const [intervalHours, setIntervalHours] = useState("24");
+  const [savingSettings, setSavingSettings] = useState(false);
+  
+  const { isSupported, isSubscribed, subscribe } = usePushNotifications();
   const { toast } = useToast();
   const { settings: siteSettings } = useSiteSettings();
   const router = useRouter();
+
+  // Use site settings if available to initialize interval
+  useEffect(() => {
+    if (siteSettings) {
+      const s = siteSettings as any;
+      if (s.auto_reminders_enabled !== undefined) {
+        setAutoEnabled(s.auto_reminders_enabled ?? true);
+      }
+      if (s.reminder_interval_hours !== undefined) {
+        setIntervalHours((s.reminder_interval_hours || 24).toString());
+      }
+    }
+  }, [siteSettings]);
+
+  const saveReminderSettings = async () => {
+    setSavingSettings(true);
+    const { data: myTenantId } = await supabase.rpc("get_my_tenant_id");
+    if (!myTenantId) {
+      toast({ title: "Could not identify tenant", variant: "destructive" });
+      setSavingSettings(false);
+      return;
+    }
+    const { error } = await (supabase as any).from("site_settings").update({
+      auto_reminders_enabled: autoEnabled,
+      reminder_interval_hours: parseInt(intervalHours) || 24,
+    }).eq("tenant_id", myTenantId);
+    
+    setSavingSettings(false);
+    if (error) {
+      toast({ title: "Failed to save settings", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Settings Saved", description: "Auto reminder settings have been updated." });
+      setSettingsOpen(false);
+    }
+  };
 
   const fetchBookings = useCallback(async () => {
     const { data: tenantId } = await supabase.rpc("get_my_tenant_id");
@@ -709,7 +763,61 @@ export default function AdminBookings() {
             {stats.departingToday > 0 && <span className="text-orange-500 ml-1">· {stats.departingToday} departing</span>}
           </p>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
+          {isSupported && !isSubscribed && (
+            <Button variant="outline" size="sm" className="h-8 text-xs bg-muted/50" onClick={subscribe}>
+              <Bell className="w-3.5 h-3.5 mr-1" /> Notifications
+            </Button>
+          )}
+
+          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 text-xs bg-muted/50" title="Reminder Settings">
+                <Settings className="w-3.5 h-3.5 mr-1" /> Auto Reminders
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Auto Reminder Settings</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-6 py-4">
+                <div className="flex flex-col space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Enable Auto Reminders</Label>
+                      <p className="text-[13px] text-muted-foreground">Automatically send reminders for confirmed bookings.</p>
+                    </div>
+                    <Switch checked={autoEnabled} onCheckedChange={setAutoEnabled} />
+                  </div>
+                  
+                  {autoEnabled && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <Label>Reminder Interval</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={intervalHours}
+                          onChange={(e) => setIntervalHours(e.target.value)}
+                          className="w-20"
+                          min="1"
+                        />
+                        <span className="text-sm text-muted-foreground">hours before check-in</span>
+                      </div>
+                      <p className="text-[12px] text-muted-foreground pt-1">
+                        An automatic notification will be sent this many hours ahead.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button onClick={saveReminderSettings} disabled={savingSettings}>
+                  {savingSettings && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Save Settings
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => fetchBookings()} title="Refresh">
             <RefreshCw className="h-3.5 w-3.5" />
           </Button>

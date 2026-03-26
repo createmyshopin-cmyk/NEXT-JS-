@@ -7,6 +7,7 @@ import { AdminSidebar } from "./AdminSidebar";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { SubscriptionBanner } from "./SubscriptionBanner";
 import { NewBookingPopup } from "./NewBookingPopup";
+import { ReminderListener } from "./ReminderListener";
 import { useBookingNotification } from "@/hooks/useBookingNotification";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 import { usePlatformMaintenanceMode } from "@/hooks/usePlatformMaintenanceMode";
@@ -213,6 +214,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <BookingNotificationListener />
+      <ReminderListener />
       <div className="min-h-screen flex w-full bg-muted/30">
         <AdminSidebar onSignOut={signOut} />
         <div className="flex-1 flex flex-col">
