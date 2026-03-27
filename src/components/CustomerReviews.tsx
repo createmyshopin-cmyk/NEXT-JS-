@@ -68,7 +68,7 @@ const CustomerReviews = ({ reviews }: Props) => {
       >
         {reviews.map((review, i) => (
           <motion.div
-            key={review.name}
+            key={review.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08 }}

@@ -351,7 +351,7 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
     if (savedStayId) {
       await saveReels(savedStayId, tenantId);
       await saveNearby(savedStayId, tenantId);
-      await saveNewReviews(savedStayId);
+      await saveNewReviews(savedStayId, tenantId);
       await saveRoomCategories(savedStayId, tenantId);
       await saveAddons(savedStayId, tenantId);
     }
@@ -398,13 +398,21 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
     }
   };
 
-  const saveNewReviews = async (stayId: string) => {
-    const newOnes = reviews.filter(r => !r.id);
-    if (newOnes.length > 0) {
-      await supabase.from("reviews").insert(
-        newOnes.map(r => ({ stay_id: stayId, guest_name: r.guest_name, rating: r.rating, comment: r.comment, avatar_url: r.avatar_url || null, photos: r.photos, status: "approved" }))
-      );
-    }
+  const saveNewReviews = async (stayId: string, tid: string | null) => {
+    const newOnes = reviews.filter((r) => !r.id);
+    if (newOnes.length === 0 || !tid) return;
+    await supabase.from("reviews").insert(
+      newOnes.map((r) => ({
+        stay_id: stayId,
+        tenant_id: tid,
+        guest_name: r.guest_name,
+        rating: r.rating,
+        comment: r.comment,
+        avatar_url: r.avatar_url || null,
+        photos: r.photos,
+        status: "approved",
+      }))
+    );
   };
 
   const saveRoomCategories = async (stayId: string, tid: string | null) => {
