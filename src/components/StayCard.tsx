@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Star, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -6,6 +6,7 @@ import type { Stay } from "@/types/stay";
 import { stayPublicPath } from "@/lib/stayPublicUrl";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { withSupabaseImageTransform } from "@/lib/supabaseImage";
 
 const badgeColorMap: Record<string, string> = {
   orange: "bg-[hsl(var(--badge-orange))]",
@@ -25,20 +26,53 @@ const StayCard = ({ stay, index }: StayCardProps) => {
   const { isWishlisted, toggleWishlist: toggle } = useWishlist();
   const [currentImage, setCurrentImage] = useState(0);
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null);
+  const [shouldLoadCard, setShouldLoadCard] = useState(index < 2);
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const wishlisted = isWishlisted(stay.id);
 
   const savings = stay.originalPrice - stay.price;
   const hasDiscount = savings > 0;
   const nextImageIndex = (currentImage + 1) % Math.max(stay.images.length, 1);
+  const currentSrc = useMemo(
+    () => withSupabaseImageTransform(stay.images[currentImage] || "", { width: 720, quality: 62, format: "webp" }),
+    [stay.images, currentImage]
+  );
+  const nextSrc = useMemo(
+    () => withSupabaseImageTransform(stay.images[nextImageIndex] || "", { width: 720, quality: 62, format: "webp" }),
+    [stay.images, nextImageIndex]
+  );
 
   useEffect(() => {
-    if (stay.images.length <= 1) return;
+    if (shouldLoadCard) return;
+    const el = cardRef.current;
+    if (!el) return;
+
+    if (typeof window === "undefined" || typeof window.IntersectionObserver === "undefined") {
+      setShouldLoadCard(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoadCard(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "220px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [shouldLoadCard]);
+
+  useEffect(() => {
+    if (!shouldLoadCard || stay.images.length <= 1) return;
     const delay = 5000 + index * 700;
     const interval = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % stay.images.length);
     }, delay);
     return () => clearInterval(interval);
-  }, [stay.images.length, index]);
+  }, [stay.images.length, index, shouldLoadCard]);
 
   const nextImage = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -77,11 +111,12 @@ const StayCard = ({ stay, index }: StayCardProps) => {
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.05 }}
-      className="shrink-0 w-[220px] md:w-[300px] lg:w-[230px] xl:w-[256px] rounded-2xl overflow-hidden bg-card shadow-card transition-shadow hover:shadow-elevated snap-start"
+      className="group shrink-0 w-[220px] md:w-[300px] lg:w-[230px] xl:w-[256px] rounded-2xl overflow-hidden bg-card shadow-card transition-shadow hover:shadow-elevated snap-start"
     >
       {/* Image Slider */}
       <div
@@ -89,24 +124,32 @@ const StayCard = ({ stay, index }: StayCardProps) => {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <motion.img
-          key={stay.images[currentImage] || `${stay.id}-current`}
-          src={stay.images[currentImage]}
-          alt={stay.name}
-          loading={index < 2 ? "eager" : "lazy"}
-          initial={{ opacity: 0.75 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="w-full h-full object-cover absolute inset-0"
-        />
-        {stay.images.length > 1 && (
-          <img
-            src={stay.images[nextImageIndex]}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="hidden"
-          />
+        {shouldLoadCard ? (
+          <>
+            <motion.img
+              key={stay.images[currentImage] || `${stay.id}-current`}
+              src={currentSrc}
+              alt={stay.name}
+              loading={index < 2 ? "eager" : "lazy"}
+              decoding="async"
+              sizes="(min-width: 1280px) 256px, (min-width: 1024px) 230px, (min-width: 768px) 300px, 220px"
+              initial={{ opacity: 0.75 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="w-full h-full object-cover absolute inset-0"
+            />
+            {stay.images.length > 1 && (
+              <img
+                src={nextSrc}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="hidden"
+              />
+            )}
+          </>
+        ) : (
+          <div className="absolute inset-0 animate-pulse bg-muted" />
         )}
 
         {/* Nav arrows */}

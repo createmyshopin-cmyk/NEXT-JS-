@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { ICON_MAP } from "@/components/admin/CategoriesBuilder";
 import { Home, Tag } from "lucide-react";
+import { useStayCategories } from "@/hooks/useStayCategories";
 
 interface CategoryTabsProps {
   selected: string;
@@ -9,23 +8,7 @@ interface CategoryTabsProps {
 }
 
 const CategoryTabs = ({ selected, onSelect }: CategoryTabsProps) => {
-  const [categories, setCategories] = useState<{ label: string; icon: string }[]>([]);
-
-  const fetchCategories = async () => {
-    const { data } = await (supabase.from("stay_categories") as any).select("label, icon, sort_order").eq("active", true).order("sort_order");
-    if (data) {
-      const dbCategories = (data as any[])
-        .map((d) => ({ label: d.label, icon: d.icon }))
-        .filter((d) => typeof d.label === "string" && d.label.trim().length > 0);
-      const hasAllStays = dbCategories.some((d) => d.label.trim().toLowerCase() === "all stays");
-      const allStaysTab = { label: "All Stays", icon: "Home" };
-      setCategories(hasAllStays ? dbCategories : [allStaysTab, ...dbCategories]);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  const { categories } = useStayCategories();
 
   if (categories.length === 0) return null;
 

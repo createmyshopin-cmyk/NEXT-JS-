@@ -15,21 +15,22 @@ import StickyBottomNav from "@/components/StickyBottomNav";
 import LazySection from "@/components/LazySection";
 import CouponBanner from "@/components/CouponBanner";
 import BestFeatures from "@/components/BestFeatures";
+import { useStayCategories } from "@/hooks/useStayCategories";
 const PromoPopup = dynamic(() => import("@/components/PromoPopup"), { ssr: false });
 const MenuPopup = dynamic(() => import("@/components/MenuPopup"), { ssr: false });
-
-const sections = [
-  { title: "Couple Friendly Stays", category: "Couple Friendly" },
-  { title: "Family Stay Picks",     category: "Family Stay" },
-  { title: "Luxury Resorts",        category: "Luxury Resort" },
-  { title: "Budget Rooms",          category: "Budget Rooms" },
-  { title: "Pool Villas",           category: "Pool Villas" },
-  { title: "Tree Houses",           category: "Tree Houses" },
-];
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState("All Stays");
   const [deferredUiReady, setDeferredUiReady] = useState(false);
+  const { categories: homepageCategories } = useStayCategories();
+
+  useEffect(() => {
+    if (homepageCategories.length === 0) return;
+    const allowed = new Set(homepageCategories.map((c) => c.label));
+    if (!allowed.has(selectedCategory)) {
+      setSelectedCategory("All Stays");
+    }
+  }, [homepageCategories, selectedCategory]);
 
   useEffect(() => {
     const run = () => setDeferredUiReady(true);
@@ -72,11 +73,11 @@ const Index = () => {
           title={selectedCategory === "All Stays" ? "All Stays" : `${selectedCategory} Stays`}
           category={selectedCategory === "All Stays" ? undefined : selectedCategory}
         />
-        {sections
-          .filter((s) => s.category !== selectedCategory)
-          .map((s) => (
-            <LazySection key={s.category} rootMargin="220px">
-              <StayCarousel title={s.title} category={s.category} />
+        {homepageCategories
+          .filter((c) => c.label !== "All Stays" && c.label !== selectedCategory)
+          .map((c) => (
+            <LazySection key={c.label} rootMargin="220px">
+              <StayCarousel title={c.label} category={c.label} />
             </LazySection>
           ))}
         <LazySection rootMargin="220px">

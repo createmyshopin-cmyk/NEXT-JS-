@@ -194,6 +194,13 @@ const StayDetails = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stay?.images.length]);
 
+  useEffect(() => {
+    if (!stay || stay.images.length === 0) return;
+    if (currentImage >= stay.images.length) {
+      setCurrentImage(0);
+    }
+  }, [stay, currentImage]);
+
   // Scroll thumbnail strip to keep active thumb visible
   useEffect(() => {
     const strip = thumbsRef.current;

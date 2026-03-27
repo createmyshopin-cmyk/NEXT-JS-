@@ -42,8 +42,25 @@ const normalizeImageValue = (value: unknown): string | null => {
 };
 
 const normalizeImageList = (images: unknown): string[] => {
-  if (!Array.isArray(images)) return [];
-  return images.map(normalizeImageValue).filter((v): v is string => Boolean(v));
+  if (Array.isArray(images)) {
+    return images.map(normalizeImageValue).filter((v): v is string => Boolean(v));
+  }
+
+  // Legacy rows may contain a serialized JSON array in a text column.
+  if (typeof images === "string") {
+    const raw = images.trim();
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map(normalizeImageValue).filter((v): v is string => Boolean(v));
+      }
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
 };
 
 function mapDbStay(row: any): Stay {
@@ -282,7 +299,16 @@ export function useStayDetail(stayId: string | undefined) {
                 location: r.location,
               }) === key
             );
-            stayData = bySegment ?? null;
+            if (bySegment?.id) {
+              const { data: fullRow } = await supabase
+                .from("stays")
+                .select("*")
+                .eq("id", bySegment.id)
+                .maybeSingle();
+              stayData = fullRow ?? null;
+            } else {
+              stayData = null;
+            }
           }
         }
 
