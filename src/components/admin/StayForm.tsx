@@ -63,8 +63,8 @@ function useLiveCategories() {
 }
 
 interface ReelItem { id?: string; title: string; thumbnail: string; url: string; platform: string; }
-interface NearbyItem { id?: string; name: string; image: string; distance: string; maps_link: string; description: string; tenant_id?: string | null; }
-interface ReviewItem { id?: string; guest_name: string; rating: number; comment: string; photos: string[]; }
+interface NearbyItem { id?: string; name: string; images: string[]; distance: string; maps_link: string; description: string; tenant_id?: string | null; }
+interface ReviewItem { id?: string; guest_name: string; rating: number; comment: string; avatar_url: string; photos: string[]; }
 
 interface AddonItem { id?: string; name: string; price: number; optional: boolean; }
 
@@ -132,10 +132,13 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
 
   // Nearby destinations
   const [nearby, setNearby] = useState<NearbyItem[]>([]);
+  const [nearbyUploadingIndex, setNearbyUploadingIndex] = useState<number | null>(null);
 
   // Reviews
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
-  const [newReview, setNewReview] = useState<ReviewItem>({ guest_name: "", rating: 5, comment: "", photos: [] });
+  const [newReview, setNewReview] = useState<ReviewItem>({ guest_name: "", rating: 5, comment: "", avatar_url: "", photos: [] });
+  const [reviewAvatarUploading, setReviewAvatarUploading] = useState(false);
+  const [reviewPhotosUploading, setReviewPhotosUploading] = useState(false);
 
   // Room Categories
   const [roomCategories, setRoomCategories] = useState<RoomCategoryItem[]>([]);
@@ -224,8 +227,37 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
       (supabase.from("stay_addons") as any).select("*").eq("stay_id", stayId).order("sort_order"),
     ]);
     const fetchedReels = reelsRes.data ? reelsRes.data.map((r: any) => ({ id: r.id, title: r.title, thumbnail: r.thumbnail, url: r.url, platform: r.platform })) : [];
-    const fetchedNearby = nearbyRes.data ? nearbyRes.data.map((n: any) => ({ id: n.id, name: n.name, image: n.image, distance: n.distance, maps_link: n.maps_link || "", description: n.description || "", tenant_id: n.tenant_id })) : [];
-    const fetchedReviews = reviewsRes.data ? reviewsRes.data.map((r: any) => ({ id: r.id, guest_name: r.guest_name, rating: r.rating, comment: r.comment, photos: r.photos || [] })) : [];
+    const parseNearbyImages = (value: unknown): string[] => {
+      if (typeof value === "string") {
+        const raw = value.trim();
+        if (!raw) return [];
+        if (raw.startsWith("[")) {
+          try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string" && v.trim().length > 0) : [];
+          } catch {
+            return [];
+          }
+        }
+        return [raw];
+      }
+      if (Array.isArray(value)) {
+        return value.filter((v): v is string => typeof v === "string" && v.trim().length > 0);
+      }
+      return [];
+    };
+    const fetchedNearby = nearbyRes.data
+      ? nearbyRes.data.map((n: any) => ({
+          id: n.id,
+          name: n.name,
+          images: parseNearbyImages(n.image),
+          distance: n.distance,
+          maps_link: n.maps_link || "",
+          description: n.description || "",
+          tenant_id: n.tenant_id,
+        }))
+      : [];
+    const fetchedReviews = reviewsRes.data ? reviewsRes.data.map((r: any) => ({ id: r.id, guest_name: r.guest_name, rating: r.rating, comment: r.comment, avatar_url: r.avatar_url || "", photos: r.photos || [] })) : [];
     const fetchedRooms = roomsRes.data ? roomsRes.data.map((r: any) => ({ id: r.id, name: r.name, max_guests: r.max_guests, available: r.available, amenities: r.amenities || [], price: r.price, original_price: r.original_price, images: r.images || [] })) : [];
     const fetchedAddons = addonsRes.data ? addonsRes.data.map((a: any) => ({ id: a.id, name: a.name, price: a.price, optional: a.optional })) : [];
 
@@ -355,7 +387,10 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
     if (nearby.length > 0) {
       await supabase.from("nearby_destinations").insert(
         nearby.map((n, i) => ({
-          stay_id: stayId, name: n.name, image: n.image, distance: n.distance,
+          stay_id: stayId,
+          name: n.name,
+          image: JSON.stringify(n.images || []),
+          distance: n.distance,
           maps_link: n.maps_link, description: n.description,
           sort_order: i, tenant_id: tid,
         }))
@@ -367,7 +402,7 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
     const newOnes = reviews.filter(r => !r.id);
     if (newOnes.length > 0) {
       await supabase.from("reviews").insert(
-        newOnes.map(r => ({ stay_id: stayId, guest_name: r.guest_name, rating: r.rating, comment: r.comment, photos: r.photos, status: "approved" }))
+        newOnes.map(r => ({ stay_id: stayId, guest_name: r.guest_name, rating: r.rating, comment: r.comment, avatar_url: r.avatar_url || null, photos: r.photos, status: "approved" }))
       );
     }
   };
@@ -469,7 +504,7 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
 
   // Nearby helpers
   const addNearby = () => {
-    setNearby(prev => [...prev, { name: "", image: "", distance: "", maps_link: "", description: "" }]);
+    setNearby(prev => [...prev, { name: "", images: [], distance: "", maps_link: "", description: "" }]);
   };
   const updateNearby = (i: number, field: keyof NearbyItem, val: string) => {
     setNearby(prev => prev.map((n, idx) => idx === i ? { ...n, [field]: val } : n));
@@ -477,10 +512,20 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
   const removeNearby = (i: number) => setNearby(prev => prev.filter((_, idx) => idx !== i));
 
   // Review helpers
+  const uploadReviewImage = async (rawFile: File, preset: "room" | "stay") => {
+    const file = await compressImage(rawFile, preset);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `reviews/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("stay-images").upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data } = supabase.storage.from("stay-images").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
   const addReview = () => {
     if (newReview.guest_name && newReview.comment) {
       setReviews(prev => [...prev, { ...newReview }]);
-      setNewReview({ guest_name: "", rating: 5, comment: "", photos: [] });
+      setNewReview({ guest_name: "", rating: 5, comment: "", avatar_url: "", photos: [] });
     }
   };
   const removeReview = (i: number) => setReviews(prev => prev.filter((_, idx) => idx !== i));
@@ -1120,7 +1165,48 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
                         <Input value={place.name} onChange={(e) => updateNearby(i, "name", e.target.value)} placeholder="Place name" />
                         <Input value={place.distance} onChange={(e) => updateNearby(i, "distance", e.target.value)} placeholder="e.g. 5 km" />
                       </div>
-                      <Input value={place.image} onChange={(e) => updateNearby(i, "image", e.target.value)} placeholder="Image URL" />
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-muted-foreground">Place photos</label>
+                        <label className="inline-flex items-center gap-1.5 text-xs border rounded-md px-2 py-1.5 cursor-pointer hover:bg-muted/50">
+                          {nearbyUploadingIndex === i ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
+                          {nearbyUploadingIndex === i ? "Uploading..." : "Upload photos"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            disabled={nearbyUploadingIndex === i}
+                            onChange={async (e) => {
+                              const files = e.target.files;
+                              if (!files || files.length === 0) return;
+                              setNearbyUploadingIndex(i);
+                              try {
+                                const urls: string[] = [];
+                                for (const rawFile of Array.from(files)) {
+                                  const url = await uploadReviewImage(rawFile, "stay");
+                                  urls.push(url);
+                                }
+                                setNearby((prev) =>
+                                  prev.map((item, idx) => (idx === i ? { ...item, images: [...item.images, ...urls] } : item))
+                                );
+                              } catch (err: any) {
+                                toast({ title: "Nearby photos upload failed", description: err?.message || "Please try again", variant: "destructive" });
+                              } finally {
+                                setNearbyUploadingIndex(null);
+                                e.target.value = "";
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                      {place.images.length > 0 && (
+                        <SortablePhotoGrid
+                          photos={place.images}
+                          onChange={(imgs) => setNearby((prev) => prev.map((item, idx) => (idx === i ? { ...item, images: imgs } : item)))}
+                          showCoverBadge={false}
+                          columns={5}
+                        />
+                      )}
                       <Input value={place.maps_link} onChange={(e) => updateNearby(i, "maps_link", e.target.value)} placeholder="Google Maps link" />
                       <Textarea value={place.description} onChange={(e) => updateNearby(i, "description", e.target.value)} placeholder="About this place..." rows={3} />
                     </div>
@@ -1142,6 +1228,84 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Client avatar image</label>
+                    <div className="flex items-center gap-2">
+                      <label className="inline-flex items-center gap-1.5 text-xs border rounded-md px-2 py-1.5 cursor-pointer hover:bg-muted/50">
+                        {reviewAvatarUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                        {reviewAvatarUploading ? "Uploading..." : "Upload avatar"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={reviewAvatarUploading}
+                          onChange={async (e) => {
+                            const rawFile = e.target.files?.[0];
+                            if (!rawFile) return;
+                            setReviewAvatarUploading(true);
+                            try {
+                              const url = await uploadReviewImage(rawFile, "room");
+                              setNewReview((prev) => ({ ...prev, avatar_url: url }));
+                            } catch (err: any) {
+                              toast({ title: "Avatar upload failed", description: err?.message || "Please try again", variant: "destructive" });
+                            } finally {
+                              setReviewAvatarUploading(false);
+                              e.target.value = "";
+                            }
+                          }}
+                        />
+                      </label>
+                      {newReview.avatar_url ? (
+                        <img src={newReview.avatar_url} alt="avatar preview" className="w-8 h-8 rounded-full object-cover border" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary border">
+                          {newReview.guest_name?.trim()?.slice(0, 1).toUpperCase() || "G"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Guest photos</label>
+                    <label className="inline-flex items-center gap-1.5 text-xs border rounded-md px-2 py-1.5 cursor-pointer hover:bg-muted/50">
+                      {reviewPhotosUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
+                      {reviewPhotosUploading ? "Uploading..." : "Upload photos"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        disabled={reviewPhotosUploading}
+                        onChange={async (e) => {
+                          const files = e.target.files;
+                          if (!files || files.length === 0) return;
+                          setReviewPhotosUploading(true);
+                          try {
+                            const urls: string[] = [];
+                            for (const raw of Array.from(files)) {
+                              const url = await uploadReviewImage(raw, "stay");
+                              urls.push(url);
+                            }
+                            setNewReview((prev) => ({ ...prev, photos: [...prev.photos, ...urls] }));
+                          } catch (err: any) {
+                            toast({ title: "Guest photos upload failed", description: err?.message || "Please try again", variant: "destructive" });
+                          } finally {
+                            setReviewPhotosUploading(false);
+                            e.target.value = "";
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+                {newReview.photos.length > 0 && (
+                  <SortablePhotoGrid
+                    photos={newReview.photos}
+                    onChange={(imgs) => setNewReview((prev) => ({ ...prev, photos: imgs }))}
+                    showCoverBadge={false}
+                    columns={5}
+                  />
+                )}
                 <Textarea value={newReview.comment} onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })} placeholder="Review text..." rows={2} />
                 <Button type="button" size="sm" onClick={addReview} disabled={!newReview.guest_name || !newReview.comment}>
                   <Plus className="h-4 w-4 mr-1" />Add Review
@@ -1158,11 +1322,28 @@ export function StayForm({ open, onOpenChange, stay, onSaved }: StayFormProps) {
                     <div key={i} className="border rounded-lg p-3 flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
+                          {review.avatar_url ? (
+                            <img src={review.avatar_url} alt={review.guest_name} className="w-7 h-7 rounded-full object-cover border shrink-0" />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary border shrink-0">
+                              {review.guest_name?.trim()?.slice(0, 1).toUpperCase() || "G"}
+                            </div>
+                          )}
                           <span className="font-medium text-sm">{review.guest_name}</span>
                           <Badge variant="secondary" className="text-[10px]">{review.rating} ★</Badge>
                           {review.id && <Badge variant="outline" className="text-[10px]">Saved</Badge>}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{review.comment}</p>
+                        {review.photos?.length > 0 && (
+                          <div className="mt-2">
+                            <SortablePhotoGrid
+                              photos={review.photos}
+                              onChange={(imgs) => setReviews((prev) => prev.map((r, idx) => (idx === i ? { ...r, photos: imgs } : r)))}
+                              showCoverBadge={false}
+                              columns={5}
+                            />
+                          </div>
+                        )}
                       </div>
                       {!review.id && (
                         <button type="button" onClick={() => removeReview(i)} className="text-destructive hover:text-destructive/80 shrink-0">

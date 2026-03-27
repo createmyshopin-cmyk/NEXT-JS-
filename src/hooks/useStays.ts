@@ -264,6 +264,30 @@ export function useStayDetail(stayId: string | undefined) {
       setNearbyDestinations([]);
 
       try {
+        const parseNearbyImage = (value: unknown): string => {
+          if (typeof value === "string") {
+            const raw = value.trim();
+            if (!raw) return "";
+            if (raw.startsWith("[")) {
+              try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                  const first = parsed.find((v) => typeof v === "string" && v.trim().length > 0);
+                  return typeof first === "string" ? first : "";
+                }
+              } catch {
+                return "";
+              }
+            }
+            return raw;
+          }
+          if (Array.isArray(value)) {
+            const first = value.find((v) => typeof v === "string" && v.trim().length > 0);
+            return typeof first === "string" ? first : "";
+          }
+          return "";
+        };
+
         const key = decodeURIComponent(stayId.trim());
         let stayData;
         if (looksLikeStayUuid(key)) {
@@ -332,7 +356,11 @@ export function useStayDetail(stayId: string | undefined) {
             if (roomsRes.data) setRoomCategories(roomsRes.data.map(mapDbRoom));
             if (reviewsRes.data) setReviews(reviewsRes.data.map(mapDbReview));
             if (reelsRes.data) setReels(reelsRes.data.map(r => ({ title: r.title, thumbnail: r.thumbnail, url: r.url, platform: r.platform as Reel["platform"] })));
-            if (nearbyRes.data) setNearbyDestinations(nearbyRes.data.map(n => ({ name: n.name, image: n.image, distance: n.distance })));
+            if (nearbyRes.data) {
+              setNearbyDestinations(
+                nearbyRes.data.map((n) => ({ name: n.name, image: parseNearbyImage((n as any).image), distance: n.distance }))
+              );
+            }
           }
         }
       } finally {

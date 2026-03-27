@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, X } from "lucide-react";
 import type { Review } from "@/types/stay";
+import { withSupabaseImageTransform } from "@/lib/supabaseImage";
 
 interface Props {
   reviews: Review[];
@@ -76,7 +77,13 @@ const CustomerReviews = ({ reviews }: Props) => {
             {/* Header */}
             <div className="flex items-center gap-3">
               {review.avatar && (review.avatar.startsWith("http") || review.avatar.startsWith("/")) ? (
-                <img src={review.avatar} alt={review.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                <img
+                  src={withSupabaseImageTransform(review.avatar, { width: 128, quality: 60, format: "webp" })}
+                  alt={review.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-9 h-9 rounded-full object-cover shrink-0"
+                />
               ) : (
                 <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
                   {review.avatar}
@@ -103,7 +110,13 @@ const CustomerReviews = ({ reviews }: Props) => {
                     onClick={() => setExpandedPhoto(photo)}
                     className="shrink-0 w-14 h-14 rounded-lg overflow-hidden"
                   >
-                    <img src={photo} alt="Review photo" loading="lazy" className="w-full h-full object-cover hover:scale-110 transition-transform duration-200" />
+                    <img
+                      src={withSupabaseImageTransform(photo, { width: 420, quality: 60, format: "webp" })}
+                      alt="Review photo"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-200"
+                    />
                   </button>
                 ))}
               </div>

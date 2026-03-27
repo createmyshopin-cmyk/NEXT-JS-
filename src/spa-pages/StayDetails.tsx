@@ -10,6 +10,7 @@ import ResortReels from "@/components/ResortReels";
 import RoomCategories from "@/components/RoomCategories";
 import type { RoomSelection } from "@/components/RoomCategories";
 import CustomerReviews from "@/components/CustomerReviews";
+import LazySection from "@/components/LazySection";
 import { useWishlist } from "@/context/WishlistContext";
 import StayCard from "@/components/StayCard";
 import BookingFormModal from "@/components/BookingFormModal";
@@ -525,7 +526,11 @@ const couponDiscount = bestCoupon ? bestCoupon.discount : 0;
       </div>
 
       {/* 4. Resort Reels */}
-      {reels.length > 0 && <ResortReels reels={reels} />}
+      {reels.length > 0 && (
+        <LazySection rootMargin="180px" minHeight="240px">
+          <ResortReels reels={reels} />
+        </LazySection>
+      )}
 
       {/* 5. Amenities */}
       <div className="px-4 mt-6">
@@ -591,10 +596,18 @@ const couponDiscount = bestCoupon ? bestCoupon.discount : 0;
       )}
 
       {/* 7. Customer Reviews */}
-      {reviews.length > 0 && <CustomerReviews reviews={reviews} />}
+      {reviews.length > 0 && (
+        <LazySection rootMargin="200px" minHeight="240px">
+          <CustomerReviews reviews={reviews} />
+        </LazySection>
+      )}
 
       {/* Nearby Destinations */}
-      {nearbyDestinations.length > 0 && <NearbyDestinations destinations={nearbyDestinations} />}
+      {nearbyDestinations.length > 0 && (
+        <LazySection rootMargin="200px" minHeight="180px">
+          <NearbyDestinations destinations={nearbyDestinations} />
+        </LazySection>
+      )}
 
       {/* Location */}
       <div className="px-4 mt-6">
