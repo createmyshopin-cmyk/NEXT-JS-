@@ -98,74 +98,86 @@ export async function bootstrapTenant(
       row.meta_title = input.companyName;
       row.currency = defaultCurrency;
       row.updated_at = new Date().toISOString();
-      const { error: ssErr } = await admin.from("site_settings").insert(row as never);
+      const { error: ssErr } = await admin
+        .from("site_settings")
+        .upsert(row as never, { onConflict: "tenant_id" });
       if (ssErr) throw ssErr;
     } else {
-      const { error: ssErr } = await admin.from("site_settings").insert({
-        tenant_id: tenantId,
-        site_name: input.companyName,
-        contact_email: input.email,
-        contact_phone: input.phone || "",
-        whatsapp_number: input.phone || "",
-        address: "",
-        currency: defaultCurrency,
-        booking_enabled: true,
-        maintenance_mode: false,
-        meta_title: input.companyName,
-        meta_description: "",
-        meta_keywords: "",
-        menu_popup_title: "",
-        gcal_calendar_id: "",
-        gcal_enabled: false,
-        gcal_webhook_url: "",
-        theme_tokens: {},
-        auto_generate_invoice: false,
-        best_features_enabled: false,
-        best_features_title: "",
-        coupon_banner_enabled: false,
-        menu_popup_enabled: false,
-        sticky_bottom_nav_enabled: false,
-        sticky_header_enabled: false,
-        sticky_menu_enabled: true,
-        sticky_menu_show_ai: true,
-        sticky_menu_show_explore: true,
-        sticky_menu_show_reels: true,
-        sticky_menu_show_wishlist: true,
-      } as never);
+      const { error: ssErr } = await admin
+        .from("site_settings")
+        .upsert(
+          {
+            tenant_id: tenantId,
+            site_name: input.companyName,
+            contact_email: input.email,
+            contact_phone: input.phone || "",
+            whatsapp_number: input.phone || "",
+            address: "",
+            currency: defaultCurrency,
+            booking_enabled: true,
+            maintenance_mode: false,
+            meta_title: input.companyName,
+            meta_description: "",
+            meta_keywords: "",
+            menu_popup_title: "",
+            gcal_calendar_id: "",
+            gcal_enabled: false,
+            gcal_webhook_url: "",
+            theme_tokens: {},
+            auto_generate_invoice: false,
+            best_features_enabled: false,
+            best_features_title: "",
+            coupon_banner_enabled: false,
+            menu_popup_enabled: false,
+            sticky_bottom_nav_enabled: false,
+            sticky_header_enabled: false,
+            sticky_menu_enabled: true,
+            sticky_menu_show_ai: true,
+            sticky_menu_show_explore: true,
+            sticky_menu_show_reels: true,
+            sticky_menu_show_wishlist: true,
+          } as never,
+          { onConflict: "tenant_id" },
+        );
       if (ssErr) throw ssErr;
     }
   } else {
-    const { error: ssErr } = await admin.from("site_settings").insert({
-      tenant_id: tenantId,
-      site_name: input.companyName,
-      contact_email: input.email,
-      contact_phone: input.phone || "",
-      whatsapp_number: input.phone || "",
-      address: "",
-      currency: defaultCurrency,
-      booking_enabled: true,
-      maintenance_mode: false,
-      meta_title: input.companyName,
-      meta_description: "",
-      meta_keywords: "",
-      menu_popup_title: "",
-      gcal_calendar_id: "",
-      gcal_enabled: false,
-      gcal_webhook_url: "",
-      theme_tokens: {},
-      auto_generate_invoice: false,
-      best_features_enabled: false,
-      best_features_title: "",
-      coupon_banner_enabled: false,
-      menu_popup_enabled: false,
-      sticky_bottom_nav_enabled: false,
-      sticky_header_enabled: false,
-      sticky_menu_enabled: true,
-      sticky_menu_show_ai: true,
-      sticky_menu_show_explore: true,
-      sticky_menu_show_reels: true,
-      sticky_menu_show_wishlist: true,
-    } as never);
+    const { error: ssErr } = await admin
+      .from("site_settings")
+      .upsert(
+        {
+          tenant_id: tenantId,
+          site_name: input.companyName,
+          contact_email: input.email,
+          contact_phone: input.phone || "",
+          whatsapp_number: input.phone || "",
+          address: "",
+          currency: defaultCurrency,
+          booking_enabled: true,
+          maintenance_mode: false,
+          meta_title: input.companyName,
+          meta_description: "",
+          meta_keywords: "",
+          menu_popup_title: "",
+          gcal_calendar_id: "",
+          gcal_enabled: false,
+          gcal_webhook_url: "",
+          theme_tokens: {},
+          auto_generate_invoice: false,
+          best_features_enabled: false,
+          best_features_title: "",
+          coupon_banner_enabled: false,
+          menu_popup_enabled: false,
+          sticky_bottom_nav_enabled: false,
+          sticky_header_enabled: false,
+          sticky_menu_enabled: true,
+          sticky_menu_show_ai: true,
+          sticky_menu_show_explore: true,
+          sticky_menu_show_reels: true,
+          sticky_menu_show_wishlist: true,
+        } as never,
+        { onConflict: "tenant_id" },
+      );
     if (ssErr) throw ssErr;
   }
 
