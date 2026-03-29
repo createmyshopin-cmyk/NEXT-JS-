@@ -22,7 +22,7 @@ const StickyHeader = () => {
 
   const nameParts = siteName.split(/(?=[A-Z\s])/).filter(Boolean);
   const firstPart = nameParts[0] || "Stay";
-  const restPart  = nameParts.slice(1).join("") || "Finder";
+  const restPart  = nameParts.slice(1).join("");
 
   return (
     <>
@@ -48,7 +48,9 @@ const StickyHeader = () => {
             ) : (
               <div className="flex items-center gap-1">
                 <span className="text-xl font-extrabold tracking-tight text-primary">{firstPart}</span>
-                <span className="text-xl font-extrabold tracking-tight text-foreground">{restPart}</span>
+                {restPart ? (
+                  <span className="text-xl font-extrabold tracking-tight text-foreground">{restPart}</span>
+                ) : null}
               </div>
             )}
           </div>
