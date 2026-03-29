@@ -1,17 +1,8 @@
-import Script from "next/script";
-
-/** Injects public Supabase config before client bundles run — fixes stale/wrong baked NEXT_PUBLIC_* in dev. */
+/**
+ * Previously injected window.__STAY_SUPABASE__ with the anon key as a plain-text
+ * inline script visible in every HTML page response. Removed — the Supabase client
+ * reads NEXT_PUBLIC_* values baked into the JS bundle instead.
+ */
 export function SupabaseEnvScript() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
-  const payload = JSON.stringify({ url, anonKey });
-  return (
-    <Script
-      id="stay-supabase-env"
-      strategy="beforeInteractive"
-      dangerouslySetInnerHTML={{
-        __html: `window.__STAY_SUPABASE__=${payload};`,
-      }}
-    />
-  );
+  return null;
 }

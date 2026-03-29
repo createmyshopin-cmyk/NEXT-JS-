@@ -17,8 +17,7 @@ export async function POST(req: Request) {
     // Optional: verify an auth header or token for cron security
     const authHeader = req.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      // In production, enforce cron secret
-      // return new Response('Unauthorized', { status: 401 });
+      return new Response('Unauthorized', { status: 401 });
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);

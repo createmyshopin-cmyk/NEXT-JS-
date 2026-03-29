@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 import { loginFailureDescription } from "@/lib/loginFailureMessage";
+import { getAuthCookieOptionsForHostname } from "@/lib/auth-cookie-options";
 
 /**
  * Password login + super_admin check via server-side fetch to Supabase.
- * Avoids browser "Failed to fetch" to *.supabase.co (ad blockers, bad client env bake).
+ * Tokens are never returned in the response body — the server sets them
+ * as HttpOnly cookies directly on the response using @supabase/ssr.
  */
 export async function POST(req: Request) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
@@ -29,6 +32,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email and password required" }, { status: 400 });
   }
 
+  // 1. Authenticate via Supabase token endpoint (server-to-server)
   const tokenRes = await fetch(`${url.replace(/\/$/, "")}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: {
@@ -60,6 +64,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unexpected auth response" }, { status: 502 });
   }
 
+  // 2. Verify super_admin role
   const rpcRes = await fetch(`${url.replace(/\/$/, "")}/rest/v1/rpc/has_role`, {
     method: "POST",
     headers: {
@@ -87,8 +92,34 @@ export async function POST(req: Request) {
     );
   }
 
-  return NextResponse.json({
-    access_token,
-    refresh_token,
+  // 3. Set session server-side as HttpOnly cookies — tokens never reach the client body
+  const hostname = new URL(req.url).hostname;
+  // strictHost: true — admin session cookie is bound to this exact hostname only,
+  // preventing tenant subdomains from inheriting the super-admin session.
+  const cookieOpts = getAuthCookieOptionsForHostname(hostname, { strictHost: true });
+  const response = NextResponse.json({ success: true });
+
+  const cookiesToSet: Array<{ name: string; value: string; options: Record<string, unknown> }> = [];
+
+  const supabase = createServerClient(url, anonKey, {
+    cookieOptions: cookieOpts,
+    cookies: {
+      getAll() {
+        return [];
+      },
+      setAll(items) {
+        items.forEach(({ name, value, options }) => {
+          cookiesToSet.push({ name, value, options });
+        });
+      },
+    },
   });
+
+  await supabase.auth.setSession({ access_token, refresh_token });
+
+  cookiesToSet.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2]);
+  });
+
+  return response;
 }

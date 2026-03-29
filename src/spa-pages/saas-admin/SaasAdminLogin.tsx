@@ -25,13 +25,14 @@ const SaasAdminLogin = () => {
       const res = await fetch("/api/auth/saas-admin-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // credentials: "same-origin" ensures Set-Cookie headers are applied
+        credentials: "same-origin",
         body: JSON.stringify({ email, password }),
       });
 
       const json = (await res.json().catch(() => ({}))) as {
         error?: string;
-        access_token?: string;
-        refresh_token?: string;
+        success?: boolean;
       };
 
       if (!res.ok) {
@@ -44,22 +45,8 @@ const SaasAdminLogin = () => {
         return;
       }
 
-      if (!json.access_token || !json.refresh_token) {
-        toast({ title: "Login failed", description: "Invalid response from server.", variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-
-      const { error: setErr } = await supabase.auth.setSession({
-        access_token: json.access_token,
-        refresh_token: json.refresh_token,
-      });
-
-      if (setErr) {
-        toast({ title: "Session error", description: setErr.message, variant: "destructive" });
-        setLoading(false);
-        return;
-      }
+      // Session cookies are set server-side as HttpOnly — refresh the client session from cookies
+      await supabase.auth.refreshSession();
 
       toast({ title: "Welcome, Super Admin" });
       router.push("/saas-admin/dashboard");

@@ -11,15 +11,22 @@ function normalizeBaseDomain(raw: string): string {
 const DEFAULT_PLATFORM_BASE = "travelvoo.in";
 
 /**
- * Parent domain for auth cookies so `www`, tenant subdomains, and apex share one session.
- * Set `NEXT_PUBLIC_AUTH_COOKIE_DOMAIN` or `NEXT_PUBLIC_PLATFORM_BASE_DOMAIN`.
- * When both are omitted, hosts under `*.travelvoo.in` still get `.travelvoo.in` so signup → tenant subdomain keeps the session.
+ * Parent domain for regular auth cookies so `www`, tenant subdomains, and apex share one session.
  * Omitted on localhost / preview hosts (host-only cookies).
+ *
+ * For privileged admin sessions (`strictHost: true`) the domain is intentionally omitted so the
+ * cookie is host-only and cannot be read by sibling tenant subdomains.
  */
-export function getAuthCookieDomainForHostname(hostname: string): string | undefined {
+export function getAuthCookieDomainForHostname(
+  hostname: string,
+  { strictHost = false }: { strictHost?: boolean } = {}
+): string | undefined {
   const h = hostname.toLowerCase();
   if (isLocalOrPreviewHostname(h)) return undefined;
   if (h === "127.0.0.1") return undefined;
+
+  // Strict-host mode: no domain attribute → cookie is bound to the exact hostname only
+  if (strictHost) return undefined;
 
   const raw =
     typeof process !== "undefined" ? process.env.NEXT_PUBLIC_PLATFORM_BASE_DOMAIN?.trim() ?? "" : "";
@@ -37,8 +44,11 @@ export function getAuthCookieDomainForHostname(hostname: string): string | undef
   return undefined;
 }
 
-export function getAuthCookieOptionsForHostname(hostname: string): CookieOptionsWithName {
-  const domain = getAuthCookieDomainForHostname(hostname);
+export function getAuthCookieOptionsForHostname(
+  hostname: string,
+  { strictHost = false }: { strictHost?: boolean } = {}
+): CookieOptionsWithName {
+  const domain = getAuthCookieDomainForHostname(hostname, { strictHost });
   const secure =
     !isLocalOrPreviewHostname(hostname) && hostname !== "localhost" && hostname !== "127.0.0.1";
 
@@ -46,6 +56,7 @@ export function getAuthCookieOptionsForHostname(hostname: string): CookieOptions
     path: "/",
     sameSite: "lax",
     secure,
+    httpOnly: true,
     ...(domain ? { domain } : {}),
   };
 }

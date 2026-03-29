@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Send, ChevronDown, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/context/TenantContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import enquiryIllustration from "@/assets/enquiry-illustration.png";
 
 const typeOptions = ["International", "Domestic"];
@@ -12,6 +12,7 @@ const travelTypeOptions = ["Solo", "Group", "Family", "Couple"];
 const EnquiryForm = () => {
   const { toast } = useToast();
   const { tenantId } = useTenant();
+  const { settings } = useSiteSettings();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -38,39 +39,34 @@ const EnquiryForm = () => {
 
     setLoading(true);
 
-    let targetTenantId = tenantId;
-    if (!targetTenantId) {
-      const { data } = await supabase.rpc("get_platform_tenant_id");
-      targetTenantId = data;
-    }
+    const res = await fetch("/api/enquiry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, tenantId: tenantId ?? undefined }),
+    });
 
-    if (targetTenantId) {
-      const { error } = await supabase.from("leads").insert({
-        tenant_id: targetTenantId,
-        source: "enquiry_form",
-        full_name: form.name.trim(),
-        phone: form.mobile.trim(),
-        email: form.email.trim() || null,
-        message: `Destination: ${form.destination || "N/A"}\nTravel Date: ${form.travelDate || "N/A"}\nLocation: ${form.location || "N/A"}\nDays: ${form.days || "N/A"}\nPeople: ${form.people || "N/A"}\nType: ${form.type || "N/A"}\nTravel Type: ${form.travelType || "N/A"}`,
-        status: "new",
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      toast({
+        title: "Error sending enquiry",
+        description: data.error ?? "Please try again later.",
+        variant: "destructive",
       });
-
-      if (error) {
-        toast({ title: "Error tracking enquiry", description: error.message, variant: "destructive" });
-        setLoading(false);
-        return;
-      }
+      setLoading(false);
+      return;
     }
 
     setLoading(false);
 
-    const phone = "919876543210";
-    const msg = encodeURIComponent(
-      `Hi! Enquiry from StayFinder:\nName: ${form.name}\nDestination: ${form.destination}\nEmail: ${form.email}\nTravel Date: ${form.travelDate}\nMobile: ${form.mobile}\nLocation: ${form.location}\nDays: ${form.days}\nPeople: ${form.people}\nType: ${form.type}\nTravel Type: ${form.travelType}`
-    );
-    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+    const phone = (settings?.whatsapp_number ?? "").replace(/\D/g, "");
+    if (phone) {
+      const msg = encodeURIComponent(
+        `Hi! Enquiry from StayFinder:\nName: ${form.name}\nDestination: ${form.destination}\nEmail: ${form.email}\nTravel Date: ${form.travelDate}\nMobile: ${form.mobile}\nLocation: ${form.location}\nDays: ${form.days}\nPeople: ${form.people}\nType: ${form.type}\nTravel Type: ${form.travelType}`
+      );
+      window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+    }
+
     toast({ title: "Enquiry sent!", description: "We'll get back to you soon." });
-    
     setForm({
       name: "", destination: "", email: "", travelDate: "", mobile: "",
       location: "", days: "", people: "", type: "", travelType: "",

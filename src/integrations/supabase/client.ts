@@ -3,26 +3,6 @@ import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "./types";
 import { getAuthCookieOptionsForHostname } from "@/lib/auth-cookie-options";
 
-declare global {
-  interface Window {
-    __STAY_SUPABASE__?: { url?: string; anonKey?: string };
-  }
-}
-
-function getEffectiveUrl(): string {
-  if (typeof window !== "undefined" && window.__STAY_SUPABASE__?.url) {
-    return window.__STAY_SUPABASE__.url;
-  }
-  return process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-}
-
-function getEffectiveKey(): string {
-  if (typeof window !== "undefined" && window.__STAY_SUPABASE__?.anonKey) {
-    return window.__STAY_SUPABASE__.anonKey;
-  }
-  return process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
-}
-
 /** In-memory storage for SSR / non-browser (no document.cookie). */
 function getMemoryStorage(): Storage {
   const mem: Record<string, string> = {};
@@ -48,11 +28,13 @@ let _client: SupabaseClient<Database> | null = null;
 
 function getClient(): SupabaseClient<Database> {
   if (_client) return _client;
-  const url = getEffectiveUrl();
-  const key = getEffectiveKey();
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
+
   if (typeof window !== "undefined" && (!url || !key)) {
     console.error(
-      "[Supabase] Missing URL or anon key. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in NEXT JS/.env.local, restart npm run dev, and ensure SupabaseEnvScript runs in layout."
+      "[Supabase] Missing URL or anon key. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local and restart the dev server."
     );
   }
 
