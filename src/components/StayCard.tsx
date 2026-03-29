@@ -230,7 +230,7 @@ const StayCard = ({ stay, index }: StayCardProps) => {
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">{stay.location}</p>
 
-        {/* Price section + Book button */}
+        {/* Price section + View Details */}
         <div className="flex items-end justify-between mt-2">
           <div>
             {hasDiscount && (
@@ -245,7 +245,7 @@ const StayCard = ({ stay, index }: StayCardProps) => {
             }}
             className="bg-primary text-primary-foreground text-xs font-bold px-5 py-2 rounded-md min-h-[36px] active:scale-95 transition-transform"
           >
-            Book
+            View Details
           </button>
         </div>
       </div>
